@@ -1,0 +1,3 @@
+v 3
+d plus1@sogang.ac.kr
+p importsav [The importsav.ado program for converting SPSS file to Stata (requires R)]
