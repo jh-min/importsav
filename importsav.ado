@@ -27,7 +27,7 @@ quietly {
 				if _rc!=0 {
 					noisily mata: printf("{cmd:importsav.ado}{text} could not find R in expected directories\n...will depend on the PATH environment variable\n")
 					local Rpath R
-					local Rmatch 0
+					local Renv on
 				}
 			}
 			local Rversion : dir "`c(pwd)'" dirs "R*", respectcase
