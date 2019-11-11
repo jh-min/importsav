@@ -1,6 +1,6 @@
-*** version 1.3 7November2019
+*** version 2.0 11November2019
 *** contact information: plus1@sogang.ac.kr
-*** subcommand of importsav
+*** a subcommand of importsav
 
 program setr
 	version 10
@@ -9,7 +9,7 @@ program setr
 quietly {
 
 	if regex("`rversion'", "[0-9]\.[0-9]\.[0-9]")!=1 | strlen("`rversion'")!=5 {
-		di as err "Type the version of R as in x.y.z format."
+		di as err "type the version of R as in x.y.z format."
 		exit 198
 	}
 	else {
