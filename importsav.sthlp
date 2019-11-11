@@ -43,7 +43,7 @@
 {pstd}
 	{cmd:importsav} depends on {cmd:haven} and {cmd:foreign} to support non-English labels.
 	Since {cmd:foreign} truncates variable labels exceeding a certain length, by default {cmd:importsav} tries {cmd:haven} first and then {cmd:foreign} only if {cmd:haven} didn’t work.
-	But using subcommand {cmd:importsav foreign}, it is also possible to try {cmd:foreign} first regardless of the malfunction of {cmd:haven}.
+	But using a subcommand {cmd:importsav foreign}, it is also possible to try {cmd:foreign} first regardless of the malfunction of {cmd:haven}.
 
 {pstd}
 	For this program to work, hence, {cmd:importsav} must ascertain location of {cmd:R} on your system.
