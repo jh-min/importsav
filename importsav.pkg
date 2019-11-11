@@ -2,8 +2,7 @@ v 3
 
 d importsav
 d Program to convert SPSS file to Stata (requires R)
-d modified from: https://codeandculture.wordpress.com/2010/06/29/importspss-ado-requires-r/
-d Distribution-Date: 7 November 2019
+d Distribution-Date: 11 November 2019
 d
 d plus1@sogang.ac.kr
 
