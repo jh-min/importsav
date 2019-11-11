@@ -111,6 +111,8 @@
 {title:Acknowledgement}
 
 {pstd}
-	This program owes a lot to {browse "https://codeandculture.wordpress.com/2010/06/29/importspss-ado-requires-r/":importspss} by Gabriel Rossman, {browse "https://ideas.repec.org/c/boc/bocode/s458303.html":whereis} by Germán Rodríguez and {browse "https://github.com/haghish/rcall/":rcall} by E. F. Haghish.
+	This program owes a lot to {browse "https://codeandculture.wordpress.com/2010/06/29/importspss-ado-requires-r/":importspss} by Gabriel Rossman,
+	{browse "https://ideas.repec.org/c/boc/bocode/s458303.html":whereis} by Germán Rodríguez
+	and {browse "https://github.com/haghish/rcall/":rcall} by E. F. Haghish.
 	The author is grateful for their informative programs.
 
