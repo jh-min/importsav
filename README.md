@@ -26,8 +26,8 @@ For this program to work, hence, `importsav` must ascertain location of R on you
 
 You can install `importsav` using either Stata’s `net install` command or user-written package [github][8].
 ```
-    net from https://raw.githubusercontent.com/jh-min/importsav/master
-    github install jh-min/importsav
+net from https://raw.githubusercontent.com/jh-min/importsav/master
+github install jh-min/importsav
 ```
 
 [8]: <https://github.com/haghish/github>
@@ -36,9 +36,9 @@ You can install `importsav` using either Stata’s `net install` command or user
 ## Syntax
 
 ```
-    importsav filename1 [ filename2 ]
-    importsav [ foreign | haven ] filename1 [ filename2 ]
-    setr x.y.z
+importsav filename1 [ filename2 ]
+importsav [ foreign | haven ] filename1 [ filename2 ]
+setr x.y.z
 ```
 > where `x.y.z` is the version of R installed on your system.
 
@@ -50,37 +50,37 @@ Note that `filename1` and `filename2` should not include any file extension, i.e
 ## Examples
 
 ```
-    importsav dataname
+importsav dataname
 ```
 > With this command, you will get `dataname.dta` from `dataname.sav`.
 
 ```
-    importsav spssfile statafile
+importsav spssfile statafile
 ```
 > With this command, you will get `statafile.dta` from `spssfile.sav`.
 
 ```
-    importsav "spss file" statafile
+importsav "spss file" statafile
 ```
 > With this command, you will get `statafile.dta` from `spss file.sav`.
 
 ```
-    importsav spssfile "C:\Data\stata file"
+importsav spssfile "C:\Data\stata file"
 ```
 > With this command, you will get `stata file.dta` in `C:\Data` from `spssfile.sav` in the `current working directory`.
 
 ```
-    importsav "C:\Data\spss file" "stata file"
+importsav "C:\Data\spss file" "stata file"
 ```
 > With this command, you will get `stata file.dta` in the `current working directory` from `spss file.sav` in `C:\Data`.
 
 ```
-    importsav foreign "spss data" stata_data
+importsav foreign "spss data" stata_data
 ```
 > With this command, you will get `stata_data.dta` from `spss data.sav` using R package `foreign`.
 
 ```
-    setr 3.6.1
+setr 3.6.1
 ```
 > With this command, you will add R version 3.6.1 to your `PATH environment variable`.
 
