@@ -1,16 +1,6 @@
-# `importsav`--Program to convert SPSS file to Stata (requires R)
+# `importsav`
 
-## Syntax
-
-```
-    importsav filename1 [ filename2 ]
-    importsav [ foreign | haven ] filename1 [ filename2 ]
-    setr x.y.z
-```
-> where `x.y.z` is the version of R installed on your system.
-
-
-## Description
+**Program to convert SPSS file to Stata (requires R)**
 
 `importsav` converts SPSS file to Stata with the help of R packages--[haven][1] and [foreign][2]. Thus, in order to use `importsav`, you need to install [R][3] on your system first. But after that, you really have no need of running R at all.
 
@@ -34,6 +24,16 @@ For this program to work, hence, `importsav` must ascertain location of R on you
 An important limitation of `importsav` is that it is not able to convert a file with *non-English characters in path*. The source of this problem lies in R itself and currently there is no credible solution. You should check your `current working directory` and `filename(s)`.
 
 Note that `filename1` and `filename2` should not include any file extension, i.e., those should not end in .dta or .sav. If you omit `filename2` then it will be automatically set identical to `filename1`.
+
+
+## Syntax
+
+```
+    importsav filename1 [ filename2 ]
+    importsav [ foreign | haven ] filename1 [ filename2 ]
+    setr x.y.z
+```
+> where `x.y.z` is the version of R installed on your system.
 
 
 ## Examples
