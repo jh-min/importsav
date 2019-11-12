@@ -21,9 +21,16 @@ For this program to work, hence, `importsav` must ascertain location of R on you
 
 `setr` is a subcommand of `importsav` which also utilizes Stata’s `shell` command to add R to your `PATH environment variable` without escaping Stata. It only works in Windows and you must `run Stata as Administrator` when using `setr`.
 
-An important limitation of `importsav` is that it is not able to convert a file with *non-English characters in path*. The source of this problem lies in R itself and currently there is no credible solution. You should check your `current working directory` and `filename(s)`.
 
-Note that `filename1` and `filename2` should not include any file extension, i.e., those should not end in .dta or .sav. If you omit `filename2` then it will be automatically set identical to `filename1`.
+## Installation
+
+You can install `importsav` using either Stata’s `net install` command or user-written package [github][8].
+```
+    net from https://raw.githubusercontent.com/jh-min/importsav/master
+    github install jh-min/importsav
+```
+
+[8]: <https://github.com/haghish/github>
 
 
 ## Syntax
@@ -34,6 +41,10 @@ Note that `filename1` and `filename2` should not include any file extension, i.e
     setr x.y.z
 ```
 > where `x.y.z` is the version of R installed on your system.
+
+An important limitation of `importsav` is that it is not able to convert a file with *non-English characters in path*. The source of this problem lies in R itself and currently there is no credible solution. You should check your `current working directory` and `filename(s)`.
+
+Note that `filename1` and `filename2` should not include any file extension, i.e., those should not end in .dta or .sav. If you omit `filename2` then it will be automatically set identical to `filename1`.
 
 
 ## Examples
