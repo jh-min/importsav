@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.0  11November2019}{...}
+{* *! version 2.0.2  13November2019}{...}
 
 {title:Title}
 
@@ -10,10 +10,13 @@
 {title:Syntax}
 
 {p 8 17 2}
-	{cmd:importsav} {it:filename1} [ {it:filename2} ]
+	{cmd:importsav} {it:{help filename:filename1}} [ {it:{help filename:filename2}} ]
 
 {p 8 17 2}
-	{cmd:importsav} [ foreign | haven ] {it:filename1} [ {it:filename2} ]
+	{cmd:importsav} [ foreign | haven ] {it:{help filename:filename1}} [ {it:{help filename:filename2}} ]
+
+{pmore2}
+	where {it:{help filename:filename2}} will be automatically set identical to {it:{help filename:filename1}} if omitted.
 
 {p 8 17 2}
 	{cmd:setr} {it:x.y.z}
@@ -61,17 +64,13 @@
 {pstd}
 	An important limitation of {cmd:importsav} is that it is not able to convert a file with {it:non-English characters} in path.
 	The source of this problem lies in {cmd:R} itself and currently there is no credible solution.
-	You should check your {it:current working directory} and {it:filename(s)}.
-
-{pstd}
-	Note that {it:filename1} and {it:filename2} should not include any file extension, i.e., those should not end in {it:.dta} or {it:.sav}.
-	If you omit {it:filename2} then it will be automatically set identical to {it:filename1}.
+	You should check your {it:current working directory} and {it:{help filename:filename(s)}}.
 
 
 {marker examples}{...}
 {title:Examples}
 
-{phang}{cmd:. importsav dataname}{p_end}
+{phang}{cmd:. importsav dataname.sav}{p_end}
 {pmore}
 	With this command, you will get {it:dataname.dta} from {it:dataname.sav}.
 
@@ -79,7 +78,7 @@
 {pmore}
 	With this command, you will get {it:statafile.dta} from {it:spssfile.sav}.
 
-{phang}{cmd:. importsav "spss file" statafile}{p_end}
+{phang}{cmd:. importsav "spss file" statafile.dta}{p_end}
 {pmore}
 	With this command, you will get {it:statafile.dta} from {it:spss file.sav}.
 
