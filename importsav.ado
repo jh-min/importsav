@@ -1,4 +1,4 @@
-*** version 2.0 11November2019
+*** version 2.0.2 13November2019
 *** contact information: plus1@sogang.ac.kr
 
 program findr
@@ -96,6 +96,36 @@ quietly {
 
 end
 
+program rrepos
+	version 10
+
+quietly {
+
+	if strmatch("`c(locale_icudflt)'", "zh*")==1 {
+		local Rrepos "https://mirrors.tuna.tsinghua.edu.cn/CRAN/"
+	}
+	else if strmatch("`c(locale_icudflt)'", "ja*")==1 {
+		local Rrepos "https://cran.ism.ac.jp/"
+	}
+	else if strmatch("`c(locale_icudflt)'", "ko*")==1 & strmatch("`c(locale_icudflt)'", "kok*")!=1 {
+		local Rrepos "https://cran.seoul.go.kr/"
+	}
+	else if strmatch("`c(locale_icudflt)'", "es*")==1 {
+		local Rrepos "http://mirror.fcaglp.unlp.edu.ar/CRAN/"
+	}
+	else if strmatch("`c(locale_icudflt)'", "sv*")==1 {
+		local Rrepos "https://ftp.acc.umu.se/mirror/CRAN/"
+	}
+	else {
+		local Rrepos "https://cloud.r-project.org/"
+	}
+
+	global Rrepos "`Rrepos'"
+
+}
+
+end
+
 program importsav
 	version 10
 	syntax anything [ , locale(string)]
@@ -104,7 +134,7 @@ quietly {
 
 	noisily findr
 
-	if "`1'"=="haven" {
+	if "`1'"=="haven" & "`2'"!="" {
 		capture importsav_`0'
 		if _rc==0 {
 			noisily mata: printf("{text}your data was successfully converted using {cmd:haven}\n")
@@ -115,7 +145,7 @@ quietly {
 			exit 601
 		}
 	}
-	else if "`1'"=="foreign" {
+	else if "`1'"=="foreign" & "`2'"!="" {
 		capture importsav_`0'
 		if _rc==0 {
 			noisily mata: printf("{text}your data was successfully converted using {cmd:foreign}\n")
@@ -158,9 +188,18 @@ quietly {
 
 	if "`statafile'"=="" {
 		local statafile "`spssfile'"
+		if strmatch("`statafile'", "*.sav")==1 {
+			local statafile=substr("`statafile'", 1, strlen("`statafile'")-4)
+		}
 	}
 	local spssfile=subinstr("`spssfile'", "\", "/", .)
 	local statafile=subinstr("`statafile'", "\", "/", .)
+	if strmatch("`spssfile'", "*.sav")!=1 {
+		local spssfile "`spssfile'.sav"
+	}
+	if strmatch("`statafile'", "*.dta")!=1 {
+		local statafile "`statafile'.dta"
+	}
 
 	local dir `c(pwd)'
 	local fws_dir=subinstr("`dir'", "\", "/", .)
@@ -169,22 +208,23 @@ quietly {
 	capture file clse rsource
 	file open rsource using `sourcefile'.R, write text replace
 
-	file write rsource `"if (!require(haven)) install.packages("haven", repos="https://cran.seoul.go.kr/"); library(haven)"' _n
+	rrepos
+	file write rsource `"if (!require(haven)) install.packages("haven", repos="$Rrepos"); library(haven)"' _n
 	file write rsource `""' _n
 	file write rsource `"setwd("`fws_dir'")"' _n
 	if "`locale'"=="NA" | "`locale'"=="na" | "`locale'"=="NULL" | "`locale'"=="null" {
 		local locale ""
 	}
 	if "`locale'"!="" {
-		file write rsource `"data <- read_sav("`spssfile'.sav", encoding='`locale'')"' _n
+		file write rsource `"data <- read_sav("`spssfile'", encoding='`locale'')"' _n
 	}
 	else {
-		file write rsource `"data <- read_sav("`spssfile'.sav")"' _n
+		file write rsource `"data <- read_sav("`spssfile'")"' _n
 	}
 	file write rsource `"write_dta(data, "temporary_`sourcefile'.dta")"' _n
 	file write rsource `"data2 <- read_dta("temporary_`sourcefile'.dta")"' _n
 	file write rsource `"attr(data2, "var.labels") <- attr(data, "variable.labels")"' _n
-	file write rsource `"write_dta(data2, "`statafile'.dta")"' _n
+	file write rsource `"write_dta(data2, "`statafile'")"' _n
 
 	file close rsource
 	shell "$Rpath" --vanilla <`sourcefile'.R
@@ -205,9 +245,18 @@ quietly {
 
 	if "`statafile'"=="" {
 		local statafile "`spssfile'"
+		if strmatch("`statafile'", "*.sav")==1 {
+			local statafile=substr("`statafile'", 1, strlen("`statafile'")-4)
+		}
 	}
 	local spssfile=subinstr("`spssfile'", "\", "/", .)
 	local statafile=subinstr("`statafile'", "\", "/", .)
+	if strmatch("`spssfile'", "*.sav")!=1 {
+		local spssfile "`spssfile'.sav"
+	}
+	if strmatch("`statafile'", "*.dta")!=1 {
+		local statafile "`statafile'.dta"
+	}
 
 	local dir `c(pwd)'
 	local fws_dir=subinstr("`dir'", "\", "/", .)
@@ -223,15 +272,15 @@ quietly {
 		local locale ""
 	}
 	if "`locale'"!="" {
-		file write rsource `"data <- read.spss("`spssfile'.sav", reencode='`locale'', to.data.frame=TRUE)"' _n
+		file write rsource `"data <- read.spss("`spssfile'", reencode='`locale'', to.data.frame=TRUE)"' _n
 	}
 	else {
-		file write rsource `"data <- read.spss("`spssfile'.sav", to.data.frame=TRUE)"' _n
+		file write rsource `"data <- read.spss("`spssfile'", to.data.frame=TRUE)"' _n
 	}
 	file write rsource `"write.dta(data, "temporary_`sourcefile'.dta")"' _n
 	file write rsource `"data2 <- read.dta("temporary_`sourcefile'.dta")"' _n
 	file write rsource `"attr(data2, "var.labels") <- attr(data, "variable.labels")"' _n
-	file write rsource `"write.dta(data2, "`statafile'.dta")"' _n
+	file write rsource `"write.dta(data2, "`statafile'")"' _n
 
 	file close rsource
 	shell "$Rpath" --vanilla <`sourcefile'.R
