@@ -14,19 +14,29 @@ quietly {
 	}
 	else {
 		if "`c(os)'"=="Windows" {
-			local rpath "C:\Program Files\R\R-`rversion'"
-			shell setx R_HOME "`rpath'" -m
-			if "`c(osdtl)'"=="64-bit" | "`c(bit)'"=="64" {
-				shell setx path "%PATH%;%R_HOME%\bin\x64" -m
+			local Renv : environ PATH
+			if strmatch("`Renv'", "*\R\R-*")==1 | strmatch("`Renv'", "*R_HOME*")==1 {
+				noisily mata: printf("{txt}R is already defined in the PATH environment variable\n")
+				exit
 			}
 			else {
-				shell setx path "%PATH%;%R_HOME%\bin" -m
-			}
-			shell set
-			local Renv : environ PATH
-			if strmatch("`Renv'", "*%R_HOME%*")!=1 {
-				noisily mata: printf("{cmd:setr.ado}{error} requires Stata to be run as Administrator\n")
-				exit 791
+				local rpath "C:\Program Files\R\R-`rversion'"
+				shell setx R_HOME "`rpath'" -m
+				if "`c(osdtl)'"=="64-bit" | "`c(bit)'"=="64" {
+					shell setx path "%R_HOME%\bin\x64;%PATH%" -m
+				}
+				else {
+					shell setx path "%R_HOME%\bin;%PATH%" -m
+				}
+				shell set
+				shell path
+				shell echo %PATH%
+				local Renv : environ PATH
+				if strmatch("`Renv'", "*\R\R-*")!=1 & strmatch("`Renv'", "*R_HOME*")!=1 {
+					noisily mata: printf("{cmd:setr.ado}{error} requires Stata to be run as Administrator\n")
+					noisily mata: printf("{txt}if you get this message while running Stata as Administrator, restart Stata and try again.\n")
+					exit 791
+				}
 			}
 		}
 		else {
