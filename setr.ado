@@ -11,7 +11,7 @@ quietly {
 	if "`c(os)'"=="Windows" {
 		if regex("`Rversion'", "[0-9]\.[0-9]\.[0-9]")!=1 | strlen("`Rversion'")!=5 {
 			di as err "type the version of R as in x.y.z format"
-		exit 198
+			exit 198
 		}
 		else {
 			local Renv : environ PATH
