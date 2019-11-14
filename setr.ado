@@ -4,23 +4,23 @@
 
 program setr
 	version 10
-	args rversion
+	args Rversion
 
 quietly {
 
-	if regex("`rversion'", "[0-9]\.[0-9]\.[0-9]")!=1 | strlen("`rversion'")!=5 {
-		di as err "type the version of R as in x.y.z format."
+	if "`c(os)'"=="Windows" {
+		if regex("`Rversion'", "[0-9]\.[0-9]\.[0-9]")!=1 | strlen("`Rversion'")!=5 {
+			di as err "type the version of R as in x.y.z format"
 		exit 198
-	}
-	else {
-		if "`c(os)'"=="Windows" {
+		}
+		else {
 			local Renv : environ PATH
 			if strmatch("`Renv'", "*\R\R-*")==1 | strmatch("`Renv'", "*R_HOME*")==1 {
-				noisily mata: printf("{txt}R is already defined in the PATH environment variable\n")
+				noisily di as txt "R is already defined in your PATH environment variable"
 				exit
 			}
 			else {
-				local rpath "C:\Program Files\R\R-`rversion'"
+				local rpath "C:\Program Files\R\R-`Rversion'"
 				shell setx R_HOME "`rpath'" -m
 				if "`c(osdtl)'"=="64-bit" | "`c(bit)'"=="64" {
 					shell setx path "%R_HOME%\bin\x64;%PATH%" -m
@@ -30,19 +30,21 @@ quietly {
 				}
 				shell set
 				shell path
-				shell echo %PATH%
-				local Renv : environ PATH
-				if strmatch("`Renv'", "*\R\R-*")!=1 & strmatch("`Renv'", "*R_HOME*")!=1 {
+				local Renv : environ R_HOME
+				if "`Renv'"=="" {
 					noisily mata: printf("{cmd:setr.ado}{error} requires Stata to be run as Administrator\n")
-					noisily mata: printf("{txt}if you get this message while running Stata as Administrator, restart Stata and try again.\n")
+					noisily di as err "if you get this message while running Stata as Administrator, restart Stata and try again"
 					exit 791
+				}
+				else {
+					noisily di as txt "R is now defined in your PATH environment variable"
 				}
 			}
 		}
-		else {
-			noisily mata: printf("{cmd:setr.ado}{error} only works in Windows\n")
-			exit 198
-		}
+	}
+	else {
+		noisily mata: printf("{cmd:setr.ado}{error} only works in Windows\n")
+		exit 198
 	}
 
 }
