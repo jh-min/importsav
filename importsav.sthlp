@@ -1,5 +1,8 @@
 {smcl}
-{* *! version 2.0.2  13November2019}{...}
+{* *! version 2.1.0  23November2019}{...}
+{viewerjumpto "Syntax" "importsav##syntax"}{...}
+{viewerjumpto "Description" "importsav##description"}{...}
+{viewerjumpto "Examples" "importsav##examples"}{...}
 
 {title:Title}
 
@@ -11,27 +14,46 @@
 
 {p 8 17 2}
 	{cmd:importsav} {it:{help filename:filename1}} [ {it:{help filename:filename2}} ]
+	[{cmd:,} {it:options}]
 
 {p 8 17 2}
 	{cmd:importsav} [ foreign | haven ] {it:{help filename:filename1}} [ {it:{help filename:filename2}} ]
+	[{cmd:,} {it:options}]
 
 {pmore2}
 	where {it:{help filename:filename2}} will be automatically set identical to {it:{help filename:filename1}} if omitted.
 
-{p 8 17 2}
-	{cmd:setr} {it:x.y.z}
 
-{pmore2}
-	where {it:x.y.z} is the version of {cmd:R} installed on your system.
+{synoptset 20 tabbed}{...}
+{synopthdr}
+{synoptline}
+{syntab:Main}
+{synopt:{opt locale(string)}}set which {help unicode locale:locale} to be used when reading {cmd:SPSS} file{p_end}
+{synopt:{opt c:ompress(#)}}set the reference size for compression (unit: {it:megabyte}, default value: {it:256}) {p_end}
+{synopt:{opt off:default}}force {cmd:importsav} not to compress the data{p_end}
+{synoptline}
+{p2colreset}{...}
+
+{p 4 6 2}
+If {opt locale(string)} is set, {cmd:importsav} will set option {cmd:encoding} of R function {cmd:haven::read_sav} and option {cmd:reencode} of R function {cmd:foreign::read.spss} using that {it:string}.{p_end}
+{p 4 6 2}
+By default, {cmd:importsav} compresses your data when current file size is larger than {it:256MB}.{p_end}
+{p 4 6 2}
+You can manually adjust that criterion via {opt compress(#)}.{p_end}
+{p 4 6 2}
+If {opt offdefault} is set, the data will not be compressed in any cases.{p_end}
+{p 4 6 2}
 
 
 {marker description}{...}
 {title:Description}
 
 {pstd}
-	{cmd:importsav} converts {cmd:SPSS} file to {cmd:Stata} with the help of {cmd:R} packages--{browse "https://www.rdocumentation.org/packages/haven/":haven} and {browse "https://www.rdocumentation.org/packages/foreign":foreign}.
+	{cmd:importsav} converts {cmd:SPSS} file to {cmd:Stata} with the help of {cmd:R} packages--{browse "https://www.rdocumentation.org/packages/haven/":haven},
+	{browse "https://www.rdocumentation.org/packages/foreign":foreign}
+	and {browse "https://www.rdocumentation.org/packages/bit64":bit64}.
 	Thus, in order to use {cmd:importsav}, you need to install {browse "https://cran.r-project.org/":R} on your system first.
-	But after that, you really have no need of running {cmd:R} at all.
+	But after that, there is no need of running {cmd:R} at all.
 
 {pstd}
 	The essential idea underlying {cmd:importsav} is {it:not to interrupt} your workflow within {cmd:Stata}.
@@ -55,11 +77,7 @@
 	(2) searching expected directories similar to github package {browse "https://github.com/haghish/rcall/":rcall}’s behavior;
 	(3) chekcing the {cmd:PATH environment variable}.
 	If all three fail to find location of {cmd:R}, {cmd:importsav} will cease to proceed.
-	In this case, you can set the {cmd:R} path manually using the {cmd:whereis} command or the {cmd:setr} command (the latter is {cmd:Windows}-only).
-
-{pstd}
-	{cmd:setr} is a subcommand of {cmd:importsav} which also utilizes {cmd:Stata}’s {cmd:shell} command to add {cmd:R} to your {cmd:PATH environment variable} without escaping {cmd:Stata}.
-	It only works in {cmd:Windows} and you must {it:run {cmd:Stata} as Administrator} when using {cmd:setr}.
+	In this case, you can set the {cmd:R} path manually using the {cmd:whereis} command.
 
 {pstd}
 	An important limitation of {cmd:importsav} is that it is not able to convert a file with {it:non-English characters} in path.
@@ -74,29 +92,25 @@
 {pmore}
 	With this command, you will get {it:dataname.dta} from {it:dataname.sav}.
 
-{phang}{cmd:. importsav spssfile statafile}{p_end}
+{phang}{cmd:. importsav spssfile statafile , locale("EUC-KR")}{p_end}
 {pmore}
-	With this command, you will get {it:statafile.dta} from {it:spssfile.sav}.
+	With this command, you will get {it:statafile.dta} from {it:spssfile.sav} using locale {it:EUC-KR} to read {cmd:SPSS} file.
 
-{phang}{cmd:. importsav "spss file" statafile.dta}{p_end}
+{phang}{cmd:. importsav "spss file" statafile.dta , c(100)}{p_end}
 {pmore}
-	With this command, you will get {it:statafile.dta} from {it:spss file.sav}.
+	With this command, you will get {it:statafile.dta} from {it:spss file.sav} and your data will be compressed if the file size is larger than {it:100MB}.
 
-{phang}{cmd:. importsav spssfile "C:\Data\stata file"}{p_end}
+{phang}{cmd:. importsav spssfile "C:\Data\stata file" , off}{p_end}
 {pmore}
-	With this command, you will get {it:stata file.dta} in {it:C:\Data} from {it:spssfile.sav} in the {it:current working directory}.
+	With this command, you will get {it:stata file.dta} in {it:C:\Data} from {it:spssfile.sav} in the {it:current working directory} and your data will not be compressed even if the file size is larger than {it:256MB}.
 
-{phang}{cmd:. importsav "C:\Data\spss file" "stata file"}{p_end}
+{phang}{cmd:. importsav "C:\Data\spss file" "stata file", c(100) off}{p_end}
 {pmore}
-	With this command, you will get {it:stata file.dta} in the {it:current working directory} from {it:spss file.sav} in {it:C:\Data}.
+	With this command, you will get {it:stata file.dta} in the {it:current working directory} from {it:spss file.sav} in {it:C:\Data} and your data will not be compressed even if the file size is larger than {it:100MB}.
 
 {phang}{cmd:. importsav foreign "spss data" stata_data}{p_end}
 {pmore}
 	With this command, you will get {it:stata_data.dta} from {it:spss data.sav} using {cmd:R} package {cmd:foreign}.
-
-{phang}{cmd:. setr 3.6.1}{p_end}
-{pmore}
-	With this command, you will add R version 3.6.1 to your {cmd:PATH environment variable}.
 
 
 {marker author}{...}

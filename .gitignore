@@ -2,7 +2,8 @@
 history/
 
 # for other purposes
-autoload.R
+*.R
+*.do
 *.zip
 
 # Eclipse Metadata

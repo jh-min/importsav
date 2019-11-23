@@ -1,4 +1,4 @@
-*** version 2.0.2 13November2019
+*** version 2.1.0 23November2019
 *** contact information: plus1@sogang.ac.kr
 
 program findr
@@ -126,9 +126,34 @@ quietly {
 
 end
 
+program getdataname
+	version 10
+
+quietly {
+
+	local dataname "`c(filename)'"
+	if "`c(os)'"=="Windows" {
+		tokenize "`dataname'" , p("\")
+	}
+	else {
+		tokenize "`dataname'" , p("/")
+	}
+	local i=1
+	while "``i''"!="" {
+		if strmatch("``i''", "*.dta")==1 {
+			local dataname "``i''"
+		}
+		local i=`i'+1
+	}
+	global dataname "`dataname'"
+
+}
+
+end
+
 program importsav
 	version 10
-	syntax anything [ , locale(string)]
+	syntax anything [ , locale(string) Compress(numlist max=1) OFFdefault]
 
 quietly {
 
@@ -137,7 +162,29 @@ quietly {
 	if "`1'"=="haven" & "`2'"!="" {
 		capture importsav_`0'
 		if _rc==0 {
-			noisily mata: printf("{text}your data was successfully converted using {cmd:haven}\n")
+			getdataname
+			noisily mata: printf("{text}$dataname was successfully converted using {cmd:haven}\n")
+			if "`offdefault'"!="" {
+				exit
+			}
+			memory
+			return list , all
+			local toobigfile r(data_data_u)
+			if "`compress'"!="" {
+				local compress=`compress'*1024*1024
+				if `toobigfile' > `compress' {
+					noisily di "please wait until compression is done..."
+					compress , nocoalesce
+					noisily save , replace
+				}
+			}
+			else {
+				if `toobigfile' > 268435456 {
+					noisily di "please wait until compression is done..."
+					compress , nocoalesce
+					noisily save , replace
+				}
+			}
 			exit
 		}
 		else {
@@ -148,7 +195,29 @@ quietly {
 	else if "`1'"=="foreign" & "`2'"!="" {
 		capture importsav_`0'
 		if _rc==0 {
-			noisily mata: printf("{text}your data was successfully converted using {cmd:foreign}\n")
+			getdataname
+			noisily mata: printf("{text}$dataname was successfully converted using {cmd:foreign}\n")
+			if "`offdefault'"!="" {
+				exit
+			}
+			memory
+			return list , all
+			local toobigfile r(data_data_u)
+			if "`compress'"!="" {
+				local compress=`compress'*1024*1024
+				if `toobigfile' > `compress' {
+					noisily di "please wait until compression is done..."
+					compress , nocoalesce
+					noisily save , replace
+				}				
+			}
+			else {
+				if `toobigfile' > 268435456 {
+					noisily di "please wait until compression is done..."
+					compress , nocoalesce
+					noisily save , replace
+				}
+			}
 			exit
 		}
 		else {
@@ -159,13 +228,59 @@ quietly {
 	else {
 		capture importsav_haven `0'
 		if _rc==0 {
-			noisily mata: printf("{text}your data was successfully converted using {cmd:haven}\n")
+			getdataname
+			noisily mata: printf("{text}$dataname was successfully converted using {cmd:haven}\n")
+			if "`offdefault'"!="" {
+				exit
+			}
+			memory
+			return list , all
+			local toobigfile r(data_data_u)
+			if "`compress'"!="" {
+				local compress=`compress'*1024*1024
+				if `toobigfile' > `compress' {
+					noisily di "please wait until compression is done..."
+					compress , nocoalesce
+					noisily save , replace
+				}
+			}
+			else {
+				if `toobigfile' > 268435456 {
+					noisily di "please wait until compression is done..."
+					compress , nocoalesce
+					noisily save , replace
+				}
+			}
+			exit
 		}
 		else {
 			noisily mata: printf("{cmd:haven}{text} has failed to convert your data\n{cmd:importsav.ado}{text} is trying to use {cmd:foreign}...\n")
 			capture importsav_foreign `0'
 			if _rc==0 {
-				noisily mata: printf("{text}your data was successfully converted using {cmd:foreign}\n")
+				getdataname
+				noisily mata: printf("{text}$dataname was successfully converted using {cmd:foreign}\n")
+				if "`offdefault'"!="" {
+					exit
+				}
+				memory
+				return list , all
+				local toobigfile r(data_data_u)
+				if "`compress'"!="" {
+					local compress=`compress'*1024*1024
+					if `toobigfile' > `compress' {
+						noisily di "please wait until compression is done..."
+						compress , nocoalesce
+						noisily save , replace
+					}
+				}
+				else {
+					if `toobigfile' > 268435456 {
+						noisily di "please wait until compression is done..."
+						compress , nocoalesce
+						noisily save , replace
+					}
+				}
+				exit
 			}
 			else {
 				noisily mata: printf("{cmd:foreign}{text} has failed to convert your data\n{error}your data could not be converted using R packages\n")
@@ -181,12 +296,12 @@ end
 
 program importsav_haven
 	version 10
-	syntax anything [ , locale(string)]
+	syntax anything [ , locale(string) Compress(numlist max=1) OFFdefault]
 	args spssfile statafile
 
 quietly {
 
-	if "`statafile'"=="" {
+	if "`statafile'"=="" | strmatch("`statafile'", ",*")==1 {
 		local statafile "`spssfile'"
 		if strmatch("`statafile'", "*.sav")==1 {
 			local statafile=substr("`statafile'", 1, strlen("`statafile'")-4)
@@ -216,20 +331,35 @@ quietly {
 		local locale ""
 	}
 	if "`locale'"!="" {
-		file write rsource `"data <- read_sav("`spssfile'", encoding='`locale'')"' _n
+		file write rsource `"data<-read_sav("`spssfile'", encoding='`locale'')"' _n
 	}
 	else {
-		file write rsource `"data <- read_sav("`spssfile'")"' _n
+		file write rsource `"data<-read_sav("`spssfile'")"' _n
 	}
-	file write rsource `"write_dta(data, "temporary_`sourcefile'.dta")"' _n
-	file write rsource `"data2 <- read_dta("temporary_`sourcefile'.dta")"' _n
-	file write rsource `"attr(data2, "var.labels") <- attr(data, "variable.labels")"' _n
+	file write rsource `"data2<-data"' _n
+	file write rsource `"n<-1"' _n
+	file write rsource `"while (n<length(data)+1) {"' _n
+	file write rsource `"	if (is.numeric(data[[n]])==TRUE) {"' _n
+	file write rsource `"		if (max(data2[[n]], na.rm=TRUE)>=2147483647) {"' _n
+	file write rsource `"			if (!require(bit64)) install.packages("bit64", repos="$Rrepos"); library(bit64)"' _n
+	file write rsource `"			class(data2[[n]])<-NULL"' _n
+	file write rsource `"			data2[[n]]<-as.integer64(data2[[n]])"' _n
+	file write rsource `"			attr(data2[[n]], "label")<-attr(data[[n]], "label", exact=TRUE)"' _n
+	file write rsource `"		}"' _n
+	file write rsource `"		else {"' _n
+	file write rsource `"			if (all(data[[n]]==as.integer(data[[n]]), na.rm=TRUE)==FALSE) {"' _n
+	file write rsource `"				data2[[n]]<-as.numeric(data[[n]])"' _n
+	file write rsource `"				attr(data2[[n]], "label")<-attr(data[[n]], "label", exact=TRUE)"' _n
+	file write rsource `"			}"' _n
+	file write rsource `"		}"' _n
+	file write rsource `"	}"' _n
+	file write rsource `"	n<-n+1"' _n
+	file write rsource `"}"' _n
 	file write rsource `"write_dta(data2, "`statafile'")"' _n
 
 	file close rsource
 	shell "$Rpath" --vanilla <`sourcefile'.R
 	erase `sourcefile'.R
-	erase "temporary_`sourcefile'.dta"
 	use "`statafile'", clear
 
 }
@@ -238,12 +368,12 @@ end
 
 program importsav_foreign
 	version 10
-	syntax anything [ , locale(string)]
+	syntax anything [ , locale(string) Compress(numlist max=1) OFFdefault]
 	args spssfile statafile
 
 quietly {
 
-	if "`statafile'"=="" {
+	if "`statafile'"=="" | strmatch("`statafile'", ",*")==1 {
 		local statafile "`spssfile'"
 		if strmatch("`statafile'", "*.sav")==1 {
 			local statafile=substr("`statafile'", 1, strlen("`statafile'")-4)
@@ -272,14 +402,14 @@ quietly {
 		local locale ""
 	}
 	if "`locale'"!="" {
-		file write rsource `"data <- read.spss("`spssfile'", reencode='`locale'', to.data.frame=TRUE)"' _n
+		file write rsource `"data<-read.spss("`spssfile'", reencode='`locale'', to.data.frame=TRUE)"' _n
 	}
 	else {
-		file write rsource `"data <- read.spss("`spssfile'", to.data.frame=TRUE)"' _n
+		file write rsource `"data<-read.spss("`spssfile'", to.data.frame=TRUE)"' _n
 	}
 	file write rsource `"write.dta(data, "temporary_`sourcefile'.dta")"' _n
-	file write rsource `"data2 <- read.dta("temporary_`sourcefile'.dta")"' _n
-	file write rsource `"attr(data2, "var.labels") <- attr(data, "variable.labels")"' _n
+	file write rsource `"data2<-read.dta("temporary_`sourcefile'.dta")"' _n
+	file write rsource `"attr(data2, "var.labels")<-attr(data, "variable.labels")"' _n
 	file write rsource `"write.dta(data2, "`statafile'")"' _n
 
 	file close rsource
