@@ -1,4 +1,4 @@
-*** version 2.1.1 25November2019
+*** version 3.0 25November2019
 *** contact information: plus1@sogang.ac.kr
 
 program findr
@@ -128,19 +128,22 @@ end
 
 program getdataname
 	version 10
+	syntax [anything]
 
 quietly {
 
-	local dataname "`c(filename)'"
-	tokenize "`dataname'" , p("/")
+	if "`anything'"=="" {
+		local anything "`c(filename)'"
+	}
+	tokenize "`anything'" , p("/")
 	local i=1
 	while "``i''"!="" {
-		if strmatch("``i''", "*.dta")==1 {
-			local dataname "``i''"
+		if strmatch("``i''", "*.dta")==1 | strmatch("``i''", "*.sav")==1 {
+			global dataname "``i''"
+			exit
 		}
 		local i=`i'+1
 	}
-	global dataname "`dataname'"
 
 }
 
@@ -148,210 +151,182 @@ end
 
 program importsav
 	version 10
-	syntax anything [, locale(string) Compress(numlist max=1) OFFdefault]
+	syntax anything [, Locale(string) Compress(integer 256) OFFdefault]
 
 quietly {
 
-	noisily findr
-
-	if "`1'"=="haven" & "`2'"!="" {
-		capture importsav_`0'
-		if _rc==0 {
-			getdataname
-			noisily mata: printf("{result}$dataname{text} was successfully converted using {cmd:haven}\n")
-			if "`offdefault'"!="" {
-				exit
-			}
-			memory
-			return list , all
-			local toobigfile r(data_data_u)
-			if "`compress'"!="" {
-				local compress=`compress'*1024*1024
-				if `toobigfile' > `compress' {
-					noisily di "please wait until compression is done..."
-					compress , nocoalesce
-					save , replace
-					noisily mata: printf("{text}file {result}$dataname{text} saved\n")
+	*** get file names
+	if "`locale'"=="" & "`compress'"=="" & "`offefault'"=="" {
+	* options: off
+		if "`1'"=="haven" & "`2'"!="" {
+		* subcommand: haven
+			local 0=substr(`"`0'"' , 7, .)
+			tokenize `"`0'"'
+			local subcommand haven
+		}
+		else if "`1'"=="foreign" & "`2'"!="" {
+		* subcommand: foreign
+			local 0=substr(`"`0'"' , 9, .)
+			tokenize `"`0'"'
+			local subcommand foreign
+		}
+	}
+	else {
+	* options: on
+		if "`1'"=="haven" & "`2'"!="" {
+		* subcommand: haven
+			local 0=substr(`"`0'"' , 7, .)
+			tokenize `"`0'"' , p(",")
+			if "`2'"=="," {
+				if strpos(`"`0'"', `"""')==0 | strmatch(`"`1'"', `""*"*"')!=0 | strmatch(`"`1'"', `"*"*"')!=0 {
+					tokenize `"`1'"'
+				}
+				else {
+					local 2 ""
 				}
 			}
-			else {
-				if `toobigfile' > 268435456 {
-					noisily di "please wait until compression is done..."
-					compress , nocoalesce
-					save , replace
-					noisily mata: printf("{text}file {result}$dataname{text} saved\n")
+			local subcommand haven
+		}
+		else if "`1'"=="foreign" & "`2'"!="" {
+		* subcommand: foreign
+			local 0=substr(`"`0'"' , 9, .)
+			tokenize `"`0'"' , p(",")
+			if "`2'"=="," {
+				if strpos(`"`0'"', `"""')==0 | strmatch(`"`1'"', `""*"*"')!=0 | strmatch(`"`1'"', `"*"*"')!=0 {
+					tokenize `"`1'"'
+				}
+				else {
+					local 2 ""
 				}
 			}
-			exit
+			local subcommand foreign
 		}
 		else {
-			noisily mata: printf("{error}your data could not be converted using {cmd:haven}\n")
+		* no subcommands
+			tokenize `"`0'"' , p(",")
+			if "`2'"=="," {
+				if strpos(`"`0'"', `"""')==0 | strmatch(`"`1'"', `""*"*"')!=0 | strmatch(`"`1'"', `"*"*"')!=0 {
+					tokenize `"`1'"'
+				}
+				else {
+					local 2 ""
+				}
+			}
+		}
+	}
+	local spssfile "`1'"
+	local statafile "`2'"
+
+	*** transform file names
+	if strmatch("`spssfile'", "*.sav")!=1 {
+		local spssfile "`spssfile'.sav"
+	}
+	local spssfile=subinstr("`spssfile'", "\", "/", .)
+	if "`statafile'"=="" {
+		local statafile=substr("`spssfile'", 1, strlen("`spssfile'")-4)
+	}
+	if strmatch("`statafile'", "*.dta")!=1 {
+		local statafile "`statafile'.dta"
+	}
+	local statafile=subinstr("`statafile'", "\", "/", .)
+
+	*** check file existence
+	capture confirm file "`spssfile'"
+	if _rc!=0 {
+		noisily di as error "file `spssfile' not found"
+		exit 601
+	}
+	noisily findr
+
+	*** call subcommands
+	global spssfile "`spssfile'"
+	global statafile "`statafile'"
+	global locale "`locale'"
+
+	if "`subcommand'"=="haven" {
+	* subcommand: haven
+		capture importsav_haven
+		if _rc==0 {
+			getdataname `spssfile'
+			noisily mata: printf("{result}$dataname{text} was successfully converted using {cmd:haven}\n")
+		}
+		else {
+			noisily mata: printf("{error}`spssfile' could not be converted using {cmd:haven}\n")
 			exit 601
 		}
 	}
-	else if "`1'"=="foreign" & "`2'"!="" {
-		capture importsav_`0'
+	else if "`subcommand'"=="foreign" {
+	* subcommand: foreign
+		capture importsav_foreign
 		if _rc==0 {
-			getdataname
+			getdataname `spssfile'
 			noisily mata: printf("{result}$dataname{text} was successfully converted using {cmd:foreign}\n")
-			if "`offdefault'"!="" {
-				exit
-			}
-			memory
-			return list , all
-			local toobigfile r(data_data_u)
-			if "`compress'"!="" {
-				local compress=`compress'*1024*1024
-				if `toobigfile' > `compress' {
-					noisily di "please wait until compression is done..."
-					compress , nocoalesce
-					save , replace
-					noisily mata: printf("{text}file {result}$dataname{text} saved\n")
-				}				
-			}
-			else {
-				if `toobigfile' > 268435456 {
-					noisily di "please wait until compression is done..."
-					compress , nocoalesce
-					save , replace
-					noisily mata: printf("{text}file {result}$dataname{text} saved\n")
-				}
-			}
-			exit
 		}
 		else {
-			noisily mata: printf("{error}your data could not be converted using {cmd:foreign}\n")
+			noisily mata: printf("{error}`spssfile' could not be converted using {cmd:foreign}\n")
 			exit 601
 		}
 	}
 	else {
-		capture importsav_haven `0'
+	* no subcommands
+		capture importsav_haven
 		if _rc==0 {
-			getdataname
+			getdataname `spssfile'
 			noisily mata: printf("{result}$dataname{text} was successfully converted using {cmd:haven}\n")
-			if "`offdefault'"!="" {
-				exit
-			}
-			memory
-			return list , all
-			local toobigfile r(data_data_u)
-			if "`compress'"!="" {
-				local compress=`compress'*1024*1024
-				if `toobigfile' > `compress' {
-					noisily di "please wait until compression is done..."
-					compress , nocoalesce
-					save , replace
-					noisily mata: printf("{text}file {result}$dataname{text} saved\n")
-				}
-			}
-			else {
-				if `toobigfile' > 268435456 {
-					noisily di "please wait until compression is done..."
-					compress , nocoalesce
-					save , replace
-					noisily mata: printf("{text}file {result}$dataname{text} saved\n")
-				}
-			}
-			exit
 		}
 		else {
 			noisily mata: printf("{cmd:haven}{text} has failed to convert your data\n{cmd:importsav.ado}{text} is trying to use {cmd:foreign}...\n")
-			capture importsav_foreign `0'
+			capture importsav_foreign
 			if _rc==0 {
-				getdataname
+				getdataname `spssfile'
 				noisily mata: printf("{result}$dataname{text} was successfully converted using {cmd:foreign}\n")
-				if "`offdefault'"!="" {
-					exit
-				}
-				memory
-				return list , all
-				local toobigfile r(data_data_u)
-				if "`compress'"!="" {
-					local compress=`compress'*1024*1024
-					if `toobigfile' > `compress' {
-						noisily di "please wait until compression is done..."
-						compress , nocoalesce
-						save , replace
-						noisily mata: printf("{text}file {result}$dataname{text} saved\n")
-					}
-				}
-				else {
-					if `toobigfile' > 268435456 {
-						noisily di "please wait until compression is done..."
-						compress , nocoalesce
-						save , replace
-						noisily mata: printf("{text}file {result}$dataname{text} saved\n")
-					}
-				}
-				exit
 			}
 			else {
 				noisily mata: printf("{cmd:foreign}{text} has failed to convert your data\n{error}your data could not be converted using R packages\n")
-				exit 601
+				exit 601				
 			}
 		}
-	exit
 	}
+	capture macro drop spssfile statafile locale dataname
+
+	*** options
+	if "`offdefault'"!="" {
+		exit
+	}
+	memory
+	return list , all
+	local toobigfile r(data_data_u)
+	local compress=`compress'*1024*1024
+	if `toobigfile' > `compress' {
+		noisily di as text "please wait until compression is done..."
+		compress , nocoalesce
+		save , replace
+		getdataname
+		noisily mata: printf("{text}file {result}$dataname{text} saved\n")
+	}
+	exit
 
 }
 
 end
 
 program importsav_haven
-	version 10
-	syntax anything [, locale(string) Compress(numlist max=1) OFFdefault]
 
 quietly {
 
-	if "`locale'"=="" & "`compress'"=="" & "`offdefault'"=="" {
-		local spssfile "`1'"
-		local statafile "`2'"
-	}
-	else {
-		tokenize `"`0'"' , p(",")
-		if "`2'"=="," {
-			if strpos(`"`0'"', `"""')==0 {
-				tokenize "`1'"
-			}
-			else if strmatch(`"`1'"', `""*"*"')!=0 | strmatch(`"`1'"', `"*"*"')!=0 {
-				tokenize `"`1'"'
-			}
-		}
-		if strmatch("`2'", "* ")==1 {
-			local 2=substr("`2'", 1, strlen("`2'")-1)
-		}
-		else if strmatch("`1'", "* ")==1 {
-			local 1=substr("`1'", 1, strlen("`1'")-1)
-		}
-		local spssfile "`1'"
-		local statafile "`2'"
-	}
-
-	if "`statafile'"=="" | strmatch("`statafile'", ",*")==1 {
-		local statafile "`spssfile'"
-		if strmatch("`statafile'", "*.sav")==1 {
-			local statafile=substr("`statafile'", 1, strlen("`statafile'")-4)
-		}
-	}
-	local spssfile=subinstr("`spssfile'", "\", "/", .)
-	local statafile=subinstr("`statafile'", "\", "/", .)
-	if strmatch("`spssfile'", "*.sav")!=1 {
-		local spssfile "`spssfile'.sav"
-	}
-	if strmatch("`statafile'", "*.dta")!=1 {
-		local statafile "`statafile'.dta"
-	}
+	local spssfile "$spssfile"
+	local statafile "$statafile"
+	local locale "$locale"
 
 	local dir `c(pwd)'
 	local fws_dir=subinstr("`dir'", "\", "/", .)
 
 	local sourcefile=round(runiform()*1000)
-	capture file clse rsource
-	file open rsource using `sourcefile'.R, write text replace
+	capture file close rsource
+	file open rsource using `sourcefile'.R , write text replace
 
 	rrepos
 	file write rsource `"if (!require(haven)) install.packages("haven", repos="$Rrepos"); library(haven)"' _n
-	file write rsource `""' _n
 	file write rsource `"setwd("`fws_dir'")"' _n
 	if "`locale'"=="NA" | "`locale'"=="na" | "`locale'"=="NULL" | "`locale'"=="null" {
 		local locale ""
@@ -394,58 +369,21 @@ end
 
 program importsav_foreign
 	version 10
-	syntax anything [, locale(string) Compress(numlist max=1) OFFdefault]
 
 quietly {
 
-	if "`locale'"=="" & "`compress'"=="" & "`offdefault'"=="" {
-		local spssfile "`1'"
-		local statafile "`2'"
-	}
-	else {
-		tokenize `"`0'"' , p(",")
-		if "`2'"=="," {
-			if strpos(`"`0'"', `"""')==0 {
-				tokenize "`1'"
-			}
-			else if strmatch(`"`1'"', `""*"*"')!=0 | strmatch(`"`1'"', `"*"*"')!=0 {
-				tokenize `"`1'"'
-			}
-		}
-		if strmatch("`2'", "* ")==1 {
-			local 2=substr("`2'", 1, strlen("`2'")-1)
-		}
-		else if strmatch("`1'", "* ")==1 {
-			local 1=substr("`1'", 1, strlen("`1'")-1)
-		}
-		local spssfile "`1'"
-		local statafile "`2'"
-	}
-
-	if "`statafile'"=="" | strmatch("`statafile'", ",*")==1 {
-		local statafile "`spssfile'"
-		if strmatch("`statafile'", "*.sav")==1 {
-			local statafile=substr("`statafile'", 1, strlen("`statafile'")-4)
-		}
-	}
-	local spssfile=subinstr("`spssfile'", "\", "/", .)
-	local statafile=subinstr("`statafile'", "\", "/", .)
-	if strmatch("`spssfile'", "*.sav")!=1 {
-		local spssfile "`spssfile'.sav"
-	}
-	if strmatch("`statafile'", "*.dta")!=1 {
-		local statafile "`statafile'.dta"
-	}
+	local spssfile "$spssfile"
+	local statafile "$statafile"
+	local locale "$locale"
 
 	local dir `c(pwd)'
 	local fws_dir=subinstr("`dir'", "\", "/", .)
 
 	local sourcefile=round(runiform()*1000)
-	capture file clse rsource
+	capture file close rsource
 	file open rsource using `sourcefile'.R, write text replace
 
 	file write rsource `"library(foreign)"' _n
-	file write rsource `""' _n
 	file write rsource `"setwd("`fws_dir'")"' _n
 	if "`locale'"=="NA" | "`locale'"=="na" | "`locale'"=="NULL" | "`locale'"=="null" {
 		local locale ""
