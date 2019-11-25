@@ -1,4 +1,4 @@
-*** version 2.1.0 23November2019
+*** version 2.1.1 25November2019
 *** contact information: plus1@sogang.ac.kr
 
 program findr
@@ -132,12 +132,7 @@ program getdataname
 quietly {
 
 	local dataname "`c(filename)'"
-	if "`c(os)'"=="Windows" {
-		tokenize "`dataname'" , p("\")
-	}
-	else {
-		tokenize "`dataname'" , p("/")
-	}
+	tokenize "`dataname'" , p("/")
 	local i=1
 	while "``i''"!="" {
 		if strmatch("``i''", "*.dta")==1 {
@@ -153,7 +148,7 @@ end
 
 program importsav
 	version 10
-	syntax anything [ , locale(string) Compress(numlist max=1) OFFdefault]
+	syntax anything [, locale(string) Compress(numlist max=1) OFFdefault]
 
 quietly {
 
@@ -163,7 +158,7 @@ quietly {
 		capture importsav_`0'
 		if _rc==0 {
 			getdataname
-			noisily mata: printf("{text}$dataname was successfully converted using {cmd:haven}\n")
+			noisily mata: printf("{result}$dataname{text} was successfully converted using {cmd:haven}\n")
 			if "`offdefault'"!="" {
 				exit
 			}
@@ -175,14 +170,16 @@ quietly {
 				if `toobigfile' > `compress' {
 					noisily di "please wait until compression is done..."
 					compress , nocoalesce
-					noisily save , replace
+					save , replace
+					noisily mata: printf("{text}file {result}$dataname{text} saved\n")
 				}
 			}
 			else {
 				if `toobigfile' > 268435456 {
 					noisily di "please wait until compression is done..."
 					compress , nocoalesce
-					noisily save , replace
+					save , replace
+					noisily mata: printf("{text}file {result}$dataname{text} saved\n")
 				}
 			}
 			exit
@@ -196,7 +193,7 @@ quietly {
 		capture importsav_`0'
 		if _rc==0 {
 			getdataname
-			noisily mata: printf("{text}$dataname was successfully converted using {cmd:foreign}\n")
+			noisily mata: printf("{result}$dataname{text} was successfully converted using {cmd:foreign}\n")
 			if "`offdefault'"!="" {
 				exit
 			}
@@ -208,14 +205,16 @@ quietly {
 				if `toobigfile' > `compress' {
 					noisily di "please wait until compression is done..."
 					compress , nocoalesce
-					noisily save , replace
+					save , replace
+					noisily mata: printf("{text}file {result}$dataname{text} saved\n")
 				}				
 			}
 			else {
 				if `toobigfile' > 268435456 {
 					noisily di "please wait until compression is done..."
 					compress , nocoalesce
-					noisily save , replace
+					save , replace
+					noisily mata: printf("{text}file {result}$dataname{text} saved\n")
 				}
 			}
 			exit
@@ -229,7 +228,7 @@ quietly {
 		capture importsav_haven `0'
 		if _rc==0 {
 			getdataname
-			noisily mata: printf("{text}$dataname was successfully converted using {cmd:haven}\n")
+			noisily mata: printf("{result}$dataname{text} was successfully converted using {cmd:haven}\n")
 			if "`offdefault'"!="" {
 				exit
 			}
@@ -241,14 +240,16 @@ quietly {
 				if `toobigfile' > `compress' {
 					noisily di "please wait until compression is done..."
 					compress , nocoalesce
-					noisily save , replace
+					save , replace
+					noisily mata: printf("{text}file {result}$dataname{text} saved\n")
 				}
 			}
 			else {
 				if `toobigfile' > 268435456 {
 					noisily di "please wait until compression is done..."
 					compress , nocoalesce
-					noisily save , replace
+					save , replace
+					noisily mata: printf("{text}file {result}$dataname{text} saved\n")
 				}
 			}
 			exit
@@ -258,7 +259,7 @@ quietly {
 			capture importsav_foreign `0'
 			if _rc==0 {
 				getdataname
-				noisily mata: printf("{text}$dataname was successfully converted using {cmd:foreign}\n")
+				noisily mata: printf("{result}$dataname{text} was successfully converted using {cmd:foreign}\n")
 				if "`offdefault'"!="" {
 					exit
 				}
@@ -270,14 +271,16 @@ quietly {
 					if `toobigfile' > `compress' {
 						noisily di "please wait until compression is done..."
 						compress , nocoalesce
-						noisily save , replace
+						save , replace
+						noisily mata: printf("{text}file {result}$dataname{text} saved\n")
 					}
 				}
 				else {
 					if `toobigfile' > 268435456 {
 						noisily di "please wait until compression is done..."
 						compress , nocoalesce
-						noisily save , replace
+						save , replace
+						noisily mata: printf("{text}file {result}$dataname{text} saved\n")
 					}
 				}
 				exit
@@ -296,10 +299,33 @@ end
 
 program importsav_haven
 	version 10
-	syntax anything [ , locale(string) Compress(numlist max=1) OFFdefault]
-	args spssfile statafile
+	syntax anything [, locale(string) Compress(numlist max=1) OFFdefault]
 
 quietly {
+
+	if "`locale'"=="" & "`compress'"=="" & "`offdefault'"=="" {
+		local spssfile "`1'"
+		local statafile "`2'"
+	}
+	else {
+		tokenize `"`0'"' , p(",")
+		if "`2'"=="," {
+			if strpos(`"`0'"', `"""')==0 {
+				tokenize "`1'"
+			}
+			else if strmatch(`"`1'"', `""*"*"')!=0 | strmatch(`"`1'"', `"*"*"')!=0 {
+				tokenize `"`1'"'
+			}
+		}
+		if strmatch("`2'", "* ")==1 {
+			local 2=substr("`2'", 1, strlen("`2'")-1)
+		}
+		else if strmatch("`1'", "* ")==1 {
+			local 1=substr("`1'", 1, strlen("`1'")-1)
+		}
+		local spssfile "`1'"
+		local statafile "`2'"
+	}
 
 	if "`statafile'"=="" | strmatch("`statafile'", ",*")==1 {
 		local statafile "`spssfile'"
@@ -368,10 +394,33 @@ end
 
 program importsav_foreign
 	version 10
-	syntax anything [ , locale(string) Compress(numlist max=1) OFFdefault]
-	args spssfile statafile
+	syntax anything [, locale(string) Compress(numlist max=1) OFFdefault]
 
 quietly {
+
+	if "`locale'"=="" & "`compress'"=="" & "`offdefault'"=="" {
+		local spssfile "`1'"
+		local statafile "`2'"
+	}
+	else {
+		tokenize `"`0'"' , p(",")
+		if "`2'"=="," {
+			if strpos(`"`0'"', `"""')==0 {
+				tokenize "`1'"
+			}
+			else if strmatch(`"`1'"', `""*"*"')!=0 | strmatch(`"`1'"', `"*"*"')!=0 {
+				tokenize `"`1'"'
+			}
+		}
+		if strmatch("`2'", "* ")==1 {
+			local 2=substr("`2'", 1, strlen("`2'")-1)
+		}
+		else if strmatch("`1'", "* ")==1 {
+			local 1=substr("`1'", 1, strlen("`1'")-1)
+		}
+		local spssfile "`1'"
+		local statafile "`2'"
+	}
 
 	if "`statafile'"=="" | strmatch("`statafile'", ",*")==1 {
 		local statafile "`spssfile'"
