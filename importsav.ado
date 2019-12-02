@@ -1,4 +1,4 @@
-*** version 3.0 25November2019
+*** version 3.0 2Dec2019
 *** contact information: plus1@sogang.ac.kr
 
 program findr
@@ -156,7 +156,7 @@ program importsav
 quietly {
 
 	*** get file names
-	if "`locale'"=="" & "`compress'"=="" & "`offefault'"=="" {
+	if "`locale'"=="" & `compress'==256 & "`offefault'"=="" {
 	* options: off
 		if "`1'"=="haven" & "`2'"!="" {
 		* subcommand: haven
@@ -176,41 +176,20 @@ quietly {
 		if "`1'"=="haven" & "`2'"!="" {
 		* subcommand: haven
 			local 0=substr(`"`0'"' , 7, .)
-			tokenize `"`0'"' , p(",")
-			if "`2'"=="," {
-				if strpos(`"`0'"', `"""')==0 | strmatch(`"`1'"', `""*"*"')!=0 | strmatch(`"`1'"', `"*"*"')!=0 {
-					tokenize `"`1'"'
-				}
-				else {
-					local 2 ""
-				}
-			}
 			local subcommand haven
 		}
 		else if "`1'"=="foreign" & "`2'"!="" {
 		* subcommand: foreign
 			local 0=substr(`"`0'"' , 9, .)
-			tokenize `"`0'"' , p(",")
-			if "`2'"=="," {
-				if strpos(`"`0'"', `"""')==0 | strmatch(`"`1'"', `""*"*"')!=0 | strmatch(`"`1'"', `"*"*"')!=0 {
-					tokenize `"`1'"'
-				}
-				else {
-					local 2 ""
-				}
-			}
 			local subcommand foreign
 		}
-		else {
-		* no subcommands
-			tokenize `"`0'"' , p(",")
-			if "`2'"=="," {
-				if strpos(`"`0'"', `"""')==0 | strmatch(`"`1'"', `""*"*"')!=0 | strmatch(`"`1'"', `"*"*"')!=0 {
-					tokenize `"`1'"'
-				}
-				else {
-					local 2 ""
-				}
+		tokenize `"`0'"' , p(",")
+		if "`2'"=="," {
+			if strpos(`"`0'"', `"""')==0 | strmatch(`"`1'"', `""*"*"')!=0 | strmatch(`"`1'"', `"*"*"')!=0 {
+				tokenize `"`1'"'
+			}
+			else {
+				local 2 ""
 			}
 		}
 	}
