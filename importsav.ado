@@ -366,10 +366,10 @@ quietly {
 	file write rsource `"n<-1"' _n
 	file write rsource `"while (n<length(data)+1) {"' _n
 	file write rsource `"	if (is.numeric(data[[n]])==TRUE) {"' _n
-	file write rsource `"		if (max(data2[[n]], na.rm=TRUE)>=2147483647) {"' _n
+	file write rsource `"		if (max(data[[n]], na.rm=TRUE)>=2147483647) {"' _n
 	file write rsource `"			if (!require(bit64)) install.packages("bit64", repos="$Rrepos"); library(bit64)"' _n
 	file write rsource `"			class(data2[[n]])<-NULL"' _n
-	file write rsource `"			data2[[n]]<-as.integer64(data2[[n]])"' _n
+	file write rsource `"			data2[[n]]<-as.integer64.integer64(data2[[n]])"' _n
 	file write rsource `"			attr(data2[[n]], "label")<-attr(data[[n]], "label", exact=TRUE)"' _n
 	file write rsource `"		}"' _n
 	file write rsource `"		else {"' _n
