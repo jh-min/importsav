@@ -22,6 +22,10 @@ For this program to work, hence, `importsav` must ascertain location of R on you
 
 An important limitation of `importsav` is that it is not able to convert a file with *non-English characters in path*. The source of this problem lies in R itself and currently there is no credible solution. You should check your `current working directory` and `filename(s)`.
 
+### Known issue(s)
+
+- (Windows) If `importsav` hangs after invoking R console within the shell, please re-run Stata `as Administrator`.
+
 
 ## Installation
 

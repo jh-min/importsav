@@ -2,6 +2,7 @@
 {* *! version 3.0  7December2019}{...}
 {viewerjumpto "Syntax" "importsav##syntax"}{...}
 {viewerjumpto "Description" "importsav##description"}{...}
+{viewerjumpto "Remarks" "importsav##remarks"}{...}
 {viewerjumpto "Examples" "importsav##examples"}{...}
 
 {title:Title}
@@ -90,6 +91,16 @@ If {opt offdefault} is set, the data will not be compressed in any cases.{p_end}
 	An important limitation of {cmd:importsav} is that it is not able to convert a file with {it:non-English characters} in path.
 	The source of this problem lies in {cmd:R} itself and currently there is no credible solution.
 	You should check your {it:current working directory} and {it:{help filename:filename(s)}}.
+
+
+{marker remarks}{...}
+{title:Remarks}
+
+{pstd}
+	Below addresses known issue(s).
+
+{pstd}
+	1. (Windows) If {cmd:importsav} hangs after invoking {cmd:R} console within the shell, please re-run {cmd:Stata} {cmd:as Administrator}.
 
 
 {marker examples}{...}
