@@ -1,4 +1,4 @@
-*** version 3.0 2Dec2019
+*** version 3.0 7Dec2019
 *** contact information: plus1@sogang.ac.kr
 
 program findr
@@ -151,12 +151,12 @@ end
 
 program importsav
 	version 10
-	syntax anything [, Locale(string) Compress(integer 256) OFFdefault]
+	syntax anything [, Encoding(string) Reencode(string) Unicode(string) Compress(integer 256) OFFdefault]
 
 quietly {
 
-	*** get file names
-	if "`locale'"=="" & `compress'==256 & "`offefault'"=="" {
+*** get file names
+	if "`encoding'"=="" & "`reencode'"=="" & "`unicode'"=="" & `compress'==256 & "`offefault'"=="" {
 	* options: off
 		if "`1'"=="haven" & "`2'"!="" {
 		* subcommand: haven
@@ -183,20 +183,15 @@ quietly {
 			local 0=substr(`"`0'"' , 9, .)
 			local subcommand foreign
 		}
-		tokenize `"`0'"' , p(",")
+		tokenize `"`0'"' , p(", ")
 		if "`2'"=="," {
-			if strpos(`"`0'"', `"""')==0 | strmatch(`"`1'"', `""*"*"')!=0 | strmatch(`"`1'"', `"*"*"')!=0 {
-				tokenize `"`1'"'
-			}
-			else {
-				local 2 ""
-			}
+			local 2 ""
 		}
 	}
 	local spssfile "`1'"
 	local statafile "`2'"
 
-	*** transform file names
+*** transform file names
 	if strmatch("`spssfile'", "*.sav")!=1 {
 		local spssfile "`spssfile'.sav"
 	}
@@ -209,7 +204,7 @@ quietly {
 	}
 	local statafile=subinstr("`statafile'", "\", "/", .)
 
-	*** check file existence
+*** check file existence
 	capture confirm file "`spssfile'"
 	if _rc!=0 {
 		noisily di as error "file `spssfile' not found"
@@ -217,61 +212,92 @@ quietly {
 	}
 	noisily findr
 
-	*** call subcommands
+*** call subcommands
 	global spssfile "`spssfile'"
 	global statafile "`statafile'"
-	global locale "`locale'"
+	if "`encoding'"=="NULL" | "`encoding'"=="null" {
+		local encoding ""
+	}
+	if "`reencode'"=="NA" | "`reencode'"=="na" {
+		local reencode ""
+	}
+	if "`encoding'"!="" & "`reencode'"=="" {
+		local reencode "`encoding'"
+	}
+	global encoding "`encoding'"
+	global reencode "`reencode'"
 
 	if "`subcommand'"=="haven" {
 	* subcommand: haven
 		capture importsav_haven
+		local tried "haven"
 		if _rc==0 {
 			getdataname `spssfile'
-			noisily mata: printf("{result}$dataname{text} was successfully converted using {cmd:haven}\n")
+			noisily mata: printf("{result}$dataname{text} was successfully converted using {cmd:`tried'}\n")
 		}
 		else {
-			noisily mata: printf("{error}`spssfile' could not be converted using {cmd:haven}\n")
+			noisily mata: printf("{error}`spssfile' could not be converted using {cmd:`tried'}\n")
 			exit 601
 		}
 	}
 	else if "`subcommand'"=="foreign" {
 	* subcommand: foreign
 		capture importsav_foreign
+		local tried "foreign"
 		if _rc==0 {
 			getdataname `spssfile'
-			noisily mata: printf("{result}$dataname{text} was successfully converted using {cmd:foreign}\n")
+			noisily mata: printf("{result}$dataname{text} was successfully converted using {cmd:`tried'}\n")
 		}
 		else {
-			noisily mata: printf("{error}`spssfile' could not be converted using {cmd:foreign}\n")
+			noisily mata: printf("{error}`spssfile' could not be converted using {cmd:`tried'}\n")
 			exit 601
 		}
 	}
 	else {
 	* no subcommands
 		capture importsav_haven
+		local tried "haven"
 		if _rc==0 {
 			getdataname `spssfile'
-			noisily mata: printf("{result}$dataname{text} was successfully converted using {cmd:haven}\n")
+			noisily mata: printf("{result}$dataname{text} was successfully converted using {cmd:`tried'}\n")
 		}
 		else {
-			noisily mata: printf("{cmd:haven}{text} has failed to convert your data\n{cmd:importsav.ado}{text} is trying to use {cmd:foreign}...\n")
+			noisily mata: printf("{cmd:`tried'}{text} has failed to convert your data\n")
 			capture importsav_foreign
+			local tried "foreign"
+			noisily mata: printf("{cmd:importsav.ado}{text} is trying to use {cmd:`tried'}...\n")
 			if _rc==0 {
 				getdataname `spssfile'
-				noisily mata: printf("{result}$dataname{text} was successfully converted using {cmd:foreign}\n")
+				noisily mata: printf("{result}$dataname{text} was successfully converted using {cmd:`tried'}\n")
 			}
 			else {
-				noisily mata: printf("{cmd:foreign}{text} has failed to convert your data\n{error}your data could not be converted using R packages\n")
+				noisily mata: printf("{cmd:`tried'}{text} has failed to convert your data\n{error}your data could not be converted using R packages\n")
 				exit 601				
 			}
 		}
 	}
-	capture macro drop spssfile statafile locale dataname
+	capture macro drop spssfile statafile encoding reencode dataname
 
-	*** options
+*** options
+	if "`tried'"=="foreign" & round(`c(stata_version)')>=14 {
+		if "`reencode'"!="" & "`unicode'"=="" {
+			local unicode "`reencode'"
+		}
+		if "`unicode'"!="" {
+			noisily mata: printf("{text}current version of {result}Stata{text} is newer than {result}13{text} but {result}`statafile'{text} contains {result}extended ASCII{text}...\n\n")
+			clear
+			unicode encoding set "`unicode'"
+			noisily unicode translate "`statafile'", invalid
+			noisily mata: printf("\n{text}you are running {result}Stata `c(stata_version)'{text} so {cmd}importsav.ado{text} translated your data to {result}UTF-8\n")
+		}
+	}
+
+	use "`statafile'", clear
+
 	if "`offdefault'"!="" {
 		exit
 	}
+
 	memory
 	return list , all
 	local toobigfile r(data_data_u)
@@ -283,6 +309,7 @@ quietly {
 		getdataname
 		noisily mata: printf("{text}file {result}$dataname{text} saved\n")
 	}
+
 	exit
 
 }
@@ -295,7 +322,7 @@ quietly {
 
 	local spssfile "$spssfile"
 	local statafile "$statafile"
-	local locale "$locale"
+	local encoding "$encoding"
 
 	local dir `c(pwd)'
 	local fws_dir=subinstr("`dir'", "\", "/", .)
@@ -307,11 +334,8 @@ quietly {
 	rrepos
 	file write rsource `"if (!require(haven)) install.packages("haven", repos="$Rrepos"); library(haven)"' _n
 	file write rsource `"setwd("`fws_dir'")"' _n
-	if "`locale'"=="NA" | "`locale'"=="na" | "`locale'"=="NULL" | "`locale'"=="null" {
-		local locale ""
-	}
-	if "`locale'"!="" {
-		file write rsource `"data<-read_sav("`spssfile'", encoding='`locale'')"' _n
+	if "`encoding'"!="" {
+		file write rsource `"data<-read_sav("`spssfile'", encoding="`encoding'")"' _n
 	}
 	else {
 		file write rsource `"data<-read_sav("`spssfile'")"' _n
@@ -340,7 +364,6 @@ quietly {
 	file close rsource
 	shell "$Rpath" --vanilla <`sourcefile'.R
 	erase `sourcefile'.R
-	use "`statafile'", clear
 
 }
 
@@ -353,7 +376,7 @@ quietly {
 
 	local spssfile "$spssfile"
 	local statafile "$statafile"
-	local locale "$locale"
+	local reencode "$reencode"
 
 	local dir `c(pwd)'
 	local fws_dir=subinstr("`dir'", "\", "/", .)
@@ -364,11 +387,8 @@ quietly {
 
 	file write rsource `"library(foreign)"' _n
 	file write rsource `"setwd("`fws_dir'")"' _n
-	if "`locale'"=="NA" | "`locale'"=="na" | "`locale'"=="NULL" | "`locale'"=="null" {
-		local locale ""
-	}
-	if "`locale'"!="" {
-		file write rsource `"data<-read.spss("`spssfile'", reencode='`locale'', to.data.frame=TRUE)"' _n
+	if "`reencode'"!="" {
+		file write rsource `"data<-read.spss("`spssfile'", reencode="`reencode'", to.data.frame=TRUE)"' _n
 	}
 	else {
 		file write rsource `"data<-read.spss("`spssfile'", to.data.frame=TRUE)"' _n
@@ -376,13 +396,13 @@ quietly {
 	file write rsource `"write.dta(data, "temporary_`sourcefile'.dta")"' _n
 	file write rsource `"data2<-read.dta("temporary_`sourcefile'.dta")"' _n
 	file write rsource `"attr(data2, "var.labels")<-attr(data, "variable.labels")"' _n
+	file write rsource `"attr(data2, "datalabel")<-"""' _n
 	file write rsource `"write.dta(data2, "`statafile'")"' _n
 
 	file close rsource
 	shell "$Rpath" --vanilla <`sourcefile'.R
 	erase `sourcefile'.R
 	erase "temporary_`sourcefile'.dta"
-	use "`statafile'", clear
 
 }
 

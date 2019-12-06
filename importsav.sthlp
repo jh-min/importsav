@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.1.0  23November2019}{...}
+{* *! version 3.0  7December2019}{...}
 {viewerjumpto "Syntax" "importsav##syntax"}{...}
 {viewerjumpto "Description" "importsav##description"}{...}
 {viewerjumpto "Examples" "importsav##examples"}{...}
@@ -28,19 +28,25 @@
 {synopthdr}
 {synoptline}
 {syntab:Main}
-{synopt:{opt locale(string)}}set which {help unicode locale:locale} to be used when reading {cmd:SPSS} file{p_end}
+{synopt:{opt e:ncoding(string)}}set which {help unicode encoding:encoding} to be used when reading {cmd:SPSS} file via {cmd:haven}{p_end}
+{synopt:{opt r:eencode(string)}}set which {help unicode encoding:encoding} to be used when reading {cmd:SPSS} file via {cmd:foreign}{p_end}
+{synopt:{opt u:nicode(string)}}set which {help unicode encoding:encoding} to be used when translating from extended ASCII after {cmd:foreign}{p_end}
 {synopt:{opt c:ompress(#)}}set the reference size for compression (unit: {it:megabyte}, default value: {it:256}) {p_end}
 {synopt:{opt off:default}}force {cmd:importsav} not to compress the data{p_end}
 {synoptline}
 {p2colreset}{...}
 
 {p 4 6 2}
-If {opt locale(string)} is set, {cmd:importsav} will set option {cmd:encoding} of R function {cmd:haven::read_sav} and option {cmd:reencode} of R function {cmd:foreign::read.spss} using that {it:string}.{p_end}
+If {opt encoding(string)} is set, {cmd:importsav} will set option {cmd:encoding} of R function {cmd:haven::read_sav} using that {it:string}.{p_end}
 {p 4 6 2}
-By default, {cmd:importsav} compresses your data when current file size is larger than {it:256MB}.{p_end}
+If {opt reencode(string)} is set, {cmd:importsav} will set option {cmd:reencode} of R function {cmd:foreign::read.spss} using that {it:string};
+here, {opt reencode(string)} will be automatically set identical to {opt encoding(string)} if omitted.{p_end}
 {p 4 6 2}
-You can manually adjust that criterion via {opt compress(#)}.{p_end}
+If {opt unicode(string)} is set and your version of {cmd:Stata} is newer than {it:13}, {cmd:importsav} will execute {help unicode translate} using that {it:string} after R package {cmd:foreign} converted your data;
+here, {opt unicode(string)} will be automatically set identical to {opt reencode(string)} if omitted.{p_end}
 {p 4 6 2}
+By default, {cmd:importsav} compresses your data when current file size is larger than {it:256MB}.
+You can manually adjust that criterion via {opt compress(#)}.
 If {opt offdefault} is set, the data will not be compressed in any cases.{p_end}
 {p 4 6 2}
 
@@ -58,10 +64,11 @@ If {opt offdefault} is set, the data will not be compressed in any cases.{p_end}
 {pstd}
 	The essential idea underlying {cmd:importsav} is {it:not to interrupt} your workflow within {cmd:Stata}.
 	With this command, you don’t need to escape {cmd:Stata} for data conversion.
+	{cmd:importsav} will automatically write and execute {cmd:R} code for you.
 
 {pstd}
 	This is how {cmd:importsav} works: if you typed the command properly,
-	{cmd:importsav} stores file names and path in {cmd:Stata}’s macros,
+	{cmd:importsav} stores file name(s) and path in {cmd:Stata}’s macros,
 	writes {cmd:R} code using information contained in those macros
 	and then sends that {cmd:R} code to {cmd:R} console through {cmd:Stata}’s {cmd:shell} command.
 
@@ -92,9 +99,9 @@ If {opt offdefault} is set, the data will not be compressed in any cases.{p_end}
 {pmore}
 	With this command, you will get {it:dataname.dta} from {it:dataname.sav}.
 
-{phang}{cmd:. importsav spssfile statafile , locale("EUC-KR")}{p_end}
+{phang}{cmd:. importsav spssfile statafile , e("EUC-KR")}{p_end}
 {pmore}
-	With this command, you will get {it:statafile.dta} from {it:spssfile.sav} using locale {it:EUC-KR} to read {cmd:SPSS} file.
+	With this command, you will get {it:statafile.dta} from {it:spssfile.sav} using {help unicode encoding:encoding} {it:EUC-KR} to read {cmd:SPSS} file.
 
 {phang}{cmd:. importsav "spss file" statafile.dta , c(100)}{p_end}
 {pmore}

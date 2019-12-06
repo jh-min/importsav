@@ -9,9 +9,9 @@
 [3]: <https://cran.r-project.org/>
 [9]: <https://www.rdocumentation.org/packages/bit64>
 
-The essential idea underlying `importsav` is *not to interrupt* your workflow within Stata. With this command, you don’t need to escape Stata for data conversion.
+The essential idea underlying `importsav` is *not to interrupt* your workflow within Stata. With this command, you don’t need to escape Stata for data conversion. `importsav` will automatically write and execute R code for you.
 
-This is how `importsav` works: if you typed the command properly, `importsav` stores file names and path in Stata’s macros, writes R code using information contained in those macros and then sends that R code to R console through Stata’s `shell` command.
+This is how `importsav` works: if you typed the command properly, `importsav` stores file name(s) and path in Stata’s macros, writes R code using information contained in those macros and then sends that R code to R console through Stata’s `shell` command.
 
 `importsav` depends on `haven` and `foreign` to support non-English labels. Since `foreign` truncates variable labels exceeding a certain length, by default `importsav` tries `haven` first and then `foreign` only if `haven` didn’t work. But using a subcommand `importsav foreign`, it is also possible to try `foreign` first regardless of the malfunction of `haven`.
 
@@ -44,44 +44,57 @@ importsav [ foreign | haven ] filename1 [ filename2 ] [, options]
 
 otpions | Description
 ---|:---
-***locale***(*string*) | set which locale to be used when reading SPSS file
+***e****ncoding*(*string*) | set which encoding to be used when reading SPSS file via `haven`
+***r****eencode*(*string*) | set which encoding to be used when reading SPSS file via `foreign`
+***u****nicode*(*string*) | set which encoding to be used when translating from extended ASCII after `foreign`
 ***c****ompress*(#) | set the reference size for compression (unit: `megabyte`, default value: `256`)
 ***off****default* | force `importsav` not to compress the data
 
-If `locale(string)` is set, `importsav` will set option `encoding` of R function `haven::read_sav` and option `reencode` of R function `foreign::read.spss` using that `string`.
+If `encoding(string)` is set, `importsav` will set option `encoding` of R function `haven::read_sav` using that `string`.
+
+If `reencode(string)` is set, `importsav` will set option `reencode` of R function `foreign::read.spss` using that `string`; here, `reencode(string)` will be automatically set identical to `encoding(string)` if omitted.
+
+If `unicode(string)` is set and your version of Stata is newer than `13`, `importsav` will execute `unicode translate` using that `string` after R package `foreign` converted your data; here, `unicode(string)` will be automatically set identical to `reencode(string)` if omitted.
 
 By default, `importsav` compresses your data when current file size is larger than `256MB`. You can manually adjust that criterion via `compress(#)`. If `offdefault` is set, the data will not be compressed in any cases.
 
+
 ## Examples
 
-```
+```stata
 importsav dataname.sav
 ```
+
 > With this command, you will get `dataname.dta` from `dataname.sav`.
 
+```stata
+importsav spssfile statafile , e("EUC-KR")
 ```
-importsav spssfile statafile , locale("EUC-KR")
-```
-> With this command, you will get `statafile.dta` from `spssfile.sav` using locale `EUC-KR` to read SPSS file.
 
-```
+> With this command, you will get `statafile.dta` from `spssfile.sav` using encoding `EUC-KR` to read SPSS file.
+
+```stata
 importsav "spss file" statafile.dta , c(100)
 ```
+
 > With this command, you will get `statafile.dta` from `spss file.sav` and your data will be compressed if the file size is larger than `100MB`.
 
-```
+```stata
 importsav spssfile "C:\Data\stata file" , off
 ```
+
 > With this command, you will get `stata file.dta` in `C:\Data` from `spssfile.sav` in the `current working directory` and your data will not be compressed even if the file size is larger than `256MB`.
 
-```
+```stata
 importsav "C:\Data\spss file" "stata file" , c(100) off
 ```
+
 > With this command, you will get `stata file.dta` in the `current working directory` from `spss file.sav` in `C:\Data` and your data will not be compressed even if the file size is larger than `100MB`.
 
-```
+```stata
 importsav foreign "spss data" stata_data
 ```
+
 > With this command, you will get `stata_data.dta` from `spss data.sav` using R package `foreign`.
 
 
