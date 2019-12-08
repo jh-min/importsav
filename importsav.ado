@@ -138,7 +138,7 @@ quietly {
 	tokenize "`anything'" , p("/")
 	local i=1
 	while "``i''"!="" {
-		if strmatch("``i''", "*.dta")==1 | strmatch("``i''", "*.sav")==1 {
+		if strmatch("``i''", "*.dta")==1 | strmatch("``i''", "*.sav")==1 | strmatch("``i''", "*.SAV")==1 {
 			global dataname "``i''"
 			exit
 		}
@@ -192,7 +192,7 @@ quietly {
 	local statafile "`2'"
 
 *** transform file names
-	if strmatch("`spssfile'", "*.sav")!=1 {
+	if strmatch("`spssfile'", "*.sav")!=1 & strmatch("`spssfile'", "*.SAV")!=1 {
 		local spssfile "`spssfile'.sav"
 	}
 	local spssfile=subinstr("`spssfile'", "\", "/", .)
