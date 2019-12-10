@@ -54,11 +54,11 @@ otpions | Description
 ***c****ompress*(#) | set the reference size for compression (unit: `megabyte`, default value: `256`)
 ***off****default* | force `importsav` not to compress the data
 
-If `encoding(string)` is set, `importsav` will set option `encoding` of R function `haven::read_sav` using that `string`.
+If `encoding(string)` is set, `importsav` will set option `encoding` of R function `haven::read_sav` using that `string`. If you specify `NULL` or `null`, it is identical not to use `encoding(string)`
 
-If `reencode(string)` is set, `importsav` will set option `reencode` of R function `foreign::read.spss` using that `string`; here, `reencode(string)` will be automatically set identical to `encoding(string)` if omitted.
+If `reencode(string)` is set, `importsav` will set option `reencode` of R function `foreign::read.spss` using that `string`; here, `reencode(string)` will be automatically set identical to `encoding(string)` if omitted. If you don’t want this fallback behaviour, specify `NA` or `na` in `reencode(string)`.
 
-If `unicode(string)` is set and your version of Stata is newer than `13`, `importsav` will execute `unicode translate` using that `string` after R package `foreign` converted your data; here, `unicode(string)` will be automatically set identical to `reencode(string)` if omitted.
+If `unicode(string)` is set and your version of Stata is newer than `13`, `importsav` will execute `unicode translate` using that `string` after R package `foreign` converted your data; here, `unicode(string)` will be automatically set identical to `reencode(string)` if omitted. If you don’t want this fallback behaviour, specify `off` in `unicode(string)`.
 
 By default, `importsav` compresses your data when current file size is larger than `256MB`. You can manually adjust that criterion via `compress(#)`. If `offdefault` is set, the data will not be compressed in any cases.
 

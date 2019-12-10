@@ -1,4 +1,4 @@
-*** version 3.0 7Dec2019
+*** version 3.0.1 11Dec2019
 *** contact information: plus1@sogang.ac.kr
 
 program findr
@@ -156,6 +156,21 @@ program importsav
 quietly {
 
 *** get file names
+	if "`encoding'"=="NULL" | "`encoding'"=="null" {
+		local encoding ""
+	}
+	if "`encoding'"!="" & "`reencode'"=="" {
+		local reencode "`encoding'"
+	}
+	if "`reencode'"=="NA" | "`reencode'"=="na" {
+		local reencode ""
+	}
+	if "`reencode'"!="" & "`unicode'"=="" {
+		local unicode "`reencode'"
+	}
+	if "`unicode'"=="off" {
+		local unicode ""
+	}
 	if "`encoding'"=="" & "`reencode'"=="" & "`unicode'"=="" & `compress'==256 & "`offefault'"=="" {
 	* options: off
 		if "`1'"=="haven" & "`2'"!="" {
@@ -215,15 +230,6 @@ quietly {
 *** call subcommands
 	global spssfile "`spssfile'"
 	global statafile "`statafile'"
-	if "`encoding'"=="NULL" | "`encoding'"=="null" {
-		local encoding ""
-	}
-	if "`reencode'"=="NA" | "`reencode'"=="na" {
-		local reencode ""
-	}
-	if "`encoding'"!="" & "`reencode'"=="" {
-		local reencode "`encoding'"
-	}
 	global encoding "`encoding'"
 	global reencode "`reencode'"
 
@@ -279,17 +285,12 @@ quietly {
 	capture macro drop spssfile statafile encoding reencode dataname
 
 *** options
-	if "`tried'"=="foreign" & round(`c(stata_version)')>=14 {
-		if "`reencode'"!="" & "`unicode'"=="" {
-			local unicode "`reencode'"
-		}
-		if "`unicode'"!="" {
-			noisily mata: printf("{text}current version of {result}Stata{text} is newer than {result}13{text} but {result}`statafile'{text} contains {result}extended ASCII{text}...\n\n")
-			clear
-			unicode encoding set "`unicode'"
-			noisily unicode translate "`statafile'", invalid
-			noisily mata: printf("\n{text}you are running {result}Stata `c(stata_version)'{text} so {cmd}importsav.ado{text} translated your data to {result}UTF-8\n")
-		}
+	if "`tried'"=="foreign" & round(`c(stata_version)')>=14 & "`unicode'"!="" {
+		noisily mata: printf("{text}current version of {result}Stata{text} is newer than {result}13{text} but {result}`statafile'{text} contains {result}extended ASCII{text}...\n\n")
+		clear
+		unicode encoding set "`unicode'"
+		noisily unicode translate "`statafile'", invalid
+		noisily mata: printf("\n{text}you are running {result}Stata `c(stata_version)'{text} so {cmd}importsav.ado{text} translated your data to {result}UTF-8\n")
 	}
 
 	use "`statafile'", clear

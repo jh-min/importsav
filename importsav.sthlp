@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 3.0  7December2019}{...}
+{* *! version 3.0.1  11December2019}{...}
 {viewerjumpto "Syntax" "importsav##syntax"}{...}
 {viewerjumpto "Description" "importsav##description"}{...}
 {viewerjumpto "Remarks" "importsav##remarks"}{...}
@@ -38,13 +38,16 @@
 {p2colreset}{...}
 
 {p 4 6 2}
-If {opt encoding(string)} is set, {cmd:importsav} will set option {cmd:encoding} of R function {cmd:haven::read_sav} using that {it:string}.{p_end}
+If {opt encoding(string)} is set, {cmd:importsav} will set option {cmd:encoding} of R function {cmd:haven::read_sav} using that {it:string}.
+If you specify {it:NULL} or {it:null}, it is identical not to use {opt encoding(string)}.{p_end}
 {p 4 6 2}
 If {opt reencode(string)} is set, {cmd:importsav} will set option {cmd:reencode} of R function {cmd:foreign::read.spss} using that {it:string};
-here, {opt reencode(string)} will be automatically set identical to {opt encoding(string)} if omitted.{p_end}
+here, {opt reencode(string)} will be automatically set identical to {opt encoding(string)} if omitted.
+If you don’t want this fallback behaviour, specify {it:NA} or {it:na} in {opt reencode(string)}.{p_end}
 {p 4 6 2}
 If {opt unicode(string)} is set and your version of {cmd:Stata} is newer than {it:13}, {cmd:importsav} will execute {help unicode translate} using that {it:string} after R package {cmd:foreign} converted your data;
-here, {opt unicode(string)} will be automatically set identical to {opt reencode(string)} if omitted.{p_end}
+here, {opt unicode(string)} will be automatically set identical to {opt reencode(string)} if omitted.
+If you don’t want this fallback behaviour, specify {it:off} in {opt unicode(string)}.{p_end}
 {p 4 6 2}
 By default, {cmd:importsav} compresses your data when current file size is larger than {it:256MB}.
 You can manually adjust that criterion via {opt compress(#)}.
