@@ -1,4 +1,4 @@
-*** version 3.0.2 14Dec2019
+*** version 3.0.3 14Dec2019
 *** contact information: plus1@sogang.ac.kr
 
 program findr
@@ -8,12 +8,14 @@ quietly {
 
 	capture whereis R
 	if _rc==0 {
+	* depend on whereis
 		local Rpath "`r(R)'"
 		if strmatch("`Rpath'", "*R.exe")==1 {
 			local Rpath=substr("`Rpath'", 1, strlen("`Rpath'")-4)
 		}
 	}
 	else {
+	* depend on expected directories
 		capture which whereis
 		if _rc==0 {
 			noisily mata: printf("{txt}location of R has not been stored with {cmd:whereis.ado}\n")
@@ -23,7 +25,8 @@ quietly {
 		}
 		noisily mata: printf("{cmd:importsav.ado}{text} searches expected directories...\n")
 		local wd `c(pwd)'
-		if "`c(os)'"=="Windows" {
+		if c(os)=="Windows" {
+		* in Windows
 			capture cd "C:\Program Files\R"
 			if _rc!=0 {
 				capture cd "C:\Program Files (x86)\R"
@@ -44,6 +47,7 @@ quietly {
 			cd "`wd'"
 		}
 		else {
+		* in macOS
 			local Rpath "/usr/bin/R"
 			capture confirm file "`Rpath'"
 			if _rc!=0 {
@@ -66,20 +70,35 @@ quietly {
 	}
 
 	if "`Renv'"=="on" {
-		local Renv : environ PATH
-		if "`c(os)'"=="Windows" {
-			tokenize `Renv' , p(";")
-			local i=1
-			while "``i''"!="" {
-				if strmatch("``i''","*\R*")==1 {
-					local Rpath "``i''"
-					local Renv off
+	* depend on environment variables
+		if c(os)=="Windows" {
+		* in Windows
+			local Renv : environ R_HOME
+			if "`Renv'"!="" {
+			* depend on %R_HOME%
+				local Rpath "`Renv'\bin\R"
+				if c(osdtl)=="64-bit" {
+					local Rpath "`Renv'\bin\x64\R"
 				}
-				local i=`i'+1
+				local Renv off
 			}
-			local Rpath "`Rpath'\R"
+			else {
+			* depend on %PATH%
+				local Renv : environ PATH
+				tokenize `Renv' , p(";")
+				local i=1
+				while "``i''"!="" {
+					if strmatch("``i''","*\R*")==1 {
+						local Rpath "``i''\R"
+						local Renv off
+					}
+					local i=`i'+1
+				}
+			}
 		}
 		else {
+		* in macOS
+			local Renv : environ PATH
 			tokenize `Renv' , p(":")
 			local i=1
 			while "``i''"!="" {
@@ -90,7 +109,7 @@ quietly {
 				local i=`i'+1
 			}
 		}
-		if "`Renv'"=="on" {
+		if "`Renv'"!="off" {
 			noisily mata: printf("{cmd:importsav.ado}{error} could not find R on your system\n")
 			exit 601
 		}
@@ -144,7 +163,7 @@ quietly {
 	tokenize "`anything'" , p("/")
 	local i=1
 	while "``i''"!="" {
-		if strmatch("``i''", "*.dta")==1 | strmatch("``i''", "*.sav")==1 | strmatch("``i''", "*.SAV")==1 {
+		if strmatch(lower("``i''"), "*.dta")==1 | strmatch(lower("``i''"), "*.sav")==1 {
 			global dataname "``i''"
 			exit
 		}
@@ -162,19 +181,19 @@ program importsav
 quietly {
 
 *** get file names
-	if "`encoding'"=="NULL" | "`encoding'"=="null" {
+	if upper("`encoding'")=="NULL" | upper("`encoding'")=="NA" | upper("`encoding'")=="OFF" {
 		local encoding ""
 	}
 	if "`encoding'"!="" & "`reencode'"=="" {
 		local reencode "`encoding'"
 	}
-	if "`reencode'"=="NA" | "`reencode'"=="na" {
+	if upper("`reencode'")=="NA" | upper("`reencode'")=="NULL" | upper("`reencode'")=="OFF" {
 		local reencode ""
 	}
 	if "`reencode'"!="" & "`unicode'"=="" {
 		local unicode "`reencode'"
 	}
-	if "`unicode'"=="off" {
+	if upper("`unicode'")=="OFF" | upper("`unicode'")=="NULL" | upper("`unicode'")=="NA" {
 		local unicode ""
 	}
 	if "`encoding'"=="" & "`reencode'"=="" & "`unicode'"=="" & `compress'==256 & "`offefault'"=="" {
@@ -213,14 +232,14 @@ quietly {
 	local statafile "`2'"
 
 *** transform file names
-	if strmatch("`spssfile'", "*.sav")!=1 & strmatch("`spssfile'", "*.SAV")!=1 {
+	if strmatch(lower("`spssfile'"), "*.sav")!=1 {
 		local spssfile "`spssfile'.sav"
 	}
 	local spssfile=subinstr("`spssfile'", "\", "/", .)
 	if "`statafile'"=="" {
 		local statafile=substr("`spssfile'", 1, strlen("`spssfile'")-4)
 	}
-	if strmatch("`statafile'", "*.dta")!=1 {
+	if strmatch(lower("`statafile'"), "*.dta")!=1 {
 		local statafile "`statafile'.dta"
 	}
 	local statafile=subinstr("`statafile'", "\", "/", .)
@@ -291,7 +310,7 @@ quietly {
 	capture macro drop spssfile statafile encoding reencode dataname
 
 *** options
-	if "`tried'"=="foreign" & round(`c(stata_version)')>=14 & "`unicode'"!="" {
+	if "`tried'"=="foreign" & round(c(stata_version))>=14 & "`unicode'"!="" {
 		noisily mata: printf("{text}current version of {result}Stata{text} is newer than {result}13{text} but {result}`statafile'{text} contains {result}extended ASCII{text}...\n\n")
 		clear
 		unicode encoding set "`unicode'"
@@ -331,8 +350,8 @@ quietly {
 	local statafile "$statafile"
 	local encoding "$encoding"
 
-	local dir `c(pwd)'
-	local fws_dir=subinstr("`dir'", "\", "/", .)
+	local bws_dir `c(pwd)'
+	local fws_dir=subinstr("`bws_dir'", "\", "/", .)
 
 	local sourcefile=round(runiform()*1000)
 	capture file close rsource
@@ -390,8 +409,8 @@ quietly {
 	local statafile "$statafile"
 	local reencode "$reencode"
 
-	local dir `c(pwd)'
-	local fws_dir=subinstr("`dir'", "\", "/", .)
+	local bws_dir `c(pwd)'
+	local fws_dir=subinstr("`bws_dir'", "\", "/", .)
 
 	local sourcefile=round(runiform()*1000)
 	capture file close rsource
