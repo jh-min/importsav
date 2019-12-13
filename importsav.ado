@@ -1,4 +1,4 @@
-*** version 3.0.1 11Dec2019
+*** version 3.0.2 14Dec2019
 *** contact information: plus1@sogang.ac.kr
 
 program findr
@@ -9,6 +9,9 @@ quietly {
 	capture whereis R
 	if _rc==0 {
 		local Rpath "`r(R)'"
+		if strmatch("`Rpath'", "*R.exe")==1 {
+			local Rpath=substr("`Rpath'", 1, strlen("`Rpath'")-4)
+		}
 	}
 	else {
 		capture which whereis
@@ -34,6 +37,9 @@ quietly {
 			local i : word count `Rversion'
 			local newest_R : word `i' of `Rversion'
 			cd "`newest_R'\bin"
+			if c(osdtl)=="64-bit" {
+				capture cd x64
+			}
 			local Rpath "`c(pwd)'\R"
 			cd "`wd'"
 		}
@@ -363,7 +369,12 @@ quietly {
 	file write rsource `"write_dta(data2, "`statafile'")"' _n
 
 	file close rsource
-	shell "$Rpath" --vanilla <`sourcefile'.R
+	shell "$Rpath" --vanilla -f "`sourcefile'.R"
+	capture confirm file "`statafile'"
+	if _rc!=0 {
+		local Rpath "$Rpath"
+		shell "`Rpath'script" `sourcefile'.R
+	}
 	erase `sourcefile'.R
 
 }
@@ -401,7 +412,12 @@ quietly {
 	file write rsource `"write.dta(data2, "`statafile'")"' _n
 
 	file close rsource
-	shell "$Rpath" --vanilla <`sourcefile'.R
+	shell "$Rpath" --vanilla -f "`sourcefile'.R"
+	capture confirm file "`statafile'"
+	if _rc!=0 {
+		local Rpath "$Rpath"
+		shell "`Rpath'script" `sourcefile'.R
+	}
 	erase `sourcefile'.R
 	erase "temporary_`sourcefile'.dta"
 
