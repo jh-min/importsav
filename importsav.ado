@@ -349,6 +349,7 @@ quietly {
 	local spssfile "$spssfile"
 	local statafile "$statafile"
 	local encoding "$encoding"
+	capture erase "`statafile'"
 
 	local bws_dir `c(pwd)'
 	local fws_dir=subinstr("`bws_dir'", "\", "/", .)
@@ -395,6 +396,7 @@ quietly {
 		shell "`Rpath'script" `sourcefile'.R
 	}
 	erase `sourcefile'.R
+	confirm file "`statafile'"
 
 }
 
@@ -408,6 +410,7 @@ quietly {
 	local spssfile "$spssfile"
 	local statafile "$statafile"
 	local reencode "$reencode"
+	capture erase "`statafile'"
 
 	local bws_dir `c(pwd)'
 	local fws_dir=subinstr("`bws_dir'", "\", "/", .)
@@ -439,6 +442,7 @@ quietly {
 	}
 	erase `sourcefile'.R
 	erase "temporary_`sourcefile'.dta"
+	confirm file "`statafile'"
 
 }
 
