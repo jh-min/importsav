@@ -29,10 +29,15 @@ An important limitation of `importsav` is that it is not able to convert a file 
 
 ## Installation
 
-You can install `importsav` using either Stata’s `net install` command or user-written package [github][8].
+You can install the latest version of `importsav` using either Stata’s `net install` command or user-written package [github][8].
 ```
 net from https://raw.githubusercontent.com/jh-min/importsav/master
 github install jh-min/importsav
+```
+
+Current version of `importsav` is also available on SSC archive.
+```
+ssc install importsav , replace
 ```
 
 [8]: <https://github.com/haghish/github>
