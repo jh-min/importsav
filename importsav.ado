@@ -1,10 +1,12 @@
-*** version 3.0.3 14Dec2019
+*** version 3.0.4 21Jan2020
 *** contact information: plus1@sogang.ac.kr
 
-program findr
+program findr , sclass
 	version 10
 
 quietly {
+
+	sreturn local Rpath ""
 
 	capture whereis R
 	if _rc==0 {
@@ -36,15 +38,17 @@ quietly {
 					local Renv on
 				}
 			}
-			local Rversion : dir "`c(pwd)'" dirs "R*", respectcase
-			local i : word count `Rversion'
-			local newest_R : word `i' of `Rversion'
-			cd "`newest_R'\bin"
-			if c(osdtl)=="64-bit" {
-				capture cd x64
+			if _rc==0 {
+				local Rversion : dir "`c(pwd)'" dirs "R*", respectcase
+				local i : word count `Rversion'
+				local newest_R : word `i' of `Rversion'
+				cd "`newest_R'\bin"
+				if c(osdtl)=="64-bit" {
+					capture cd x64
+				}
+				local Rpath "`c(pwd)'\R"
+				cd "`wd'"
 			}
-			local Rpath "`c(pwd)'\R"
-			cd "`wd'"
 		}
 		else {
 		* in macOS
@@ -115,16 +119,18 @@ quietly {
 		}
 	}
 
-	global Rpath "`Rpath'"
+	sreturn local Rpath "`Rpath'"
 
 }
 
 end
 
-program rrepos
+program rrepos , sclass
 	version 10
 
 quietly {
+
+	sreturn local Rrepos ""
 
 	if strmatch("`c(locale_icudflt)'", "zh*")==1 {
 		local Rrepos "https://mirrors.tuna.tsinghua.edu.cn/CRAN/"
@@ -145,18 +151,19 @@ quietly {
 		local Rrepos "https://cloud.r-project.org/"
 	}
 
-	global Rrepos "`Rrepos'"
+	sreturn local Rrepos "`Rrepos'"
 
 }
 
 end
 
-program getdataname
+program getdataname , sclass
 	version 10
 	syntax [anything]
 
 quietly {
 
+	sreturn local dataname ""
 	if "`anything'"=="" {
 		local anything "`c(filename)'"
 	}
@@ -164,7 +171,7 @@ quietly {
 	local i=1
 	while "``i''"!="" {
 		if strmatch(lower("``i''"), "*.dta")==1 | strmatch(lower("``i''"), "*.sav")==1 {
-			global dataname "``i''"
+			sreturn local dataname "``i''"
 			exit
 		}
 		local i=`i'+1
@@ -174,11 +181,16 @@ quietly {
 
 end
 
-program importsav
+program importsav , sclass
 	version 10
 	syntax anything [, Encoding(string) Reencode(string) Unicode(string) Compress(integer 256) OFFdefault]
 
 quietly {
+
+	sreturn local spssfile ""
+	sreturn local statafile ""
+	sreturn local encoding ""
+	sreturn local reencode ""
 
 *** get file names
 	if upper("`encoding'")=="NULL" | upper("`encoding'")=="NA" | upper("`encoding'")=="OFF" {
@@ -253,10 +265,10 @@ quietly {
 	noisily findr
 
 *** call subcommands
-	global spssfile "`spssfile'"
-	global statafile "`statafile'"
-	global encoding "`encoding'"
-	global reencode "`reencode'"
+	sreturn local spssfile "`spssfile'"
+	sreturn local statafile "`statafile'"
+	sreturn local encoding "`encoding'"
+	sreturn local reencode "`reencode'"
 
 	if "`subcommand'"=="haven" {
 	* subcommand: haven
@@ -264,7 +276,7 @@ quietly {
 		local tried "haven"
 		if _rc==0 {
 			getdataname `spssfile'
-			noisily mata: printf("{result}$dataname{text} was successfully converted using {cmd:`tried'}\n")
+			noisily mata: printf("{result}`s(dataname)'{text} was successfully converted using {cmd:`tried'}\n")
 		}
 		else {
 			noisily mata: printf("{error}`spssfile' could not be converted using {cmd:`tried'}\n")
@@ -277,7 +289,7 @@ quietly {
 		local tried "foreign"
 		if _rc==0 {
 			getdataname `spssfile'
-			noisily mata: printf("{result}$dataname{text} was successfully converted using {cmd:`tried'}\n")
+			noisily mata: printf("{result}`s(dataname)'{text} was successfully converted using {cmd:`tried'}\n")
 		}
 		else {
 			noisily mata: printf("{error}`spssfile' could not be converted using {cmd:`tried'}\n")
@@ -290,7 +302,7 @@ quietly {
 		local tried "haven"
 		if _rc==0 {
 			getdataname `spssfile'
-			noisily mata: printf("{result}$dataname{text} was successfully converted using {cmd:`tried'}\n")
+			noisily mata: printf("{result}`s(dataname)'{text} was successfully converted using {cmd:`tried'}\n")
 		}
 		else {
 			noisily mata: printf("{cmd:`tried'}{text} has failed to convert your data\n")
@@ -299,7 +311,7 @@ quietly {
 			noisily mata: printf("{cmd:importsav.ado}{text} is trying to use {cmd:`tried'}...\n")
 			if _rc==0 {
 				getdataname `spssfile'
-				noisily mata: printf("{result}$dataname{text} was successfully converted using {cmd:`tried'}\n")
+				noisily mata: printf("{result}`s(dataname)'{text} was successfully converted using {cmd:`tried'}\n")
 			}
 			else {
 				noisily mata: printf("{cmd:`tried'}{text} has failed to convert your data\n{error}your data could not be converted using R packages\n")
@@ -333,7 +345,7 @@ quietly {
 		compress , nocoalesce
 		save , replace
 		getdataname
-		noisily mata: printf("{text}file {result}$dataname{text} saved\n")
+		noisily mata: printf("{text}file {result}`s(dataname)'{text} saved\n")
 	}
 
 	exit
@@ -346,9 +358,9 @@ program importsav_haven
 
 quietly {
 
-	local spssfile "$spssfile"
-	local statafile "$statafile"
-	local encoding "$encoding"
+	local spssfile "`s(spssfile)'"
+	local statafile "`s(statafile)'"
+	local encoding "`s(encoding)'"
 	capture erase "`statafile'"
 
 	local bws_dir `c(pwd)'
@@ -359,7 +371,7 @@ quietly {
 	file open rsource using `sourcefile'.R , write text replace
 
 	rrepos
-	file write rsource `"if (!require(haven)) install.packages("haven", repos="$Rrepos"); library(haven)"' _n
+	file write rsource `"if (!require(haven)) install.packages("haven", repos="`s(Rrepos)'"); library(haven)"' _n
 	file write rsource `"setwd("`fws_dir'")"' _n
 	if "`encoding'"!="" {
 		file write rsource `"data<-read_sav("`spssfile'", encoding="`encoding'")"' _n
@@ -372,7 +384,7 @@ quietly {
 	file write rsource `"while (n<length(data)+1) {"' _n
 	file write rsource `"	if (is.numeric(data[[n]])==TRUE) {"' _n
 	file write rsource `"		if (max(data[[n]], na.rm=TRUE)>=2147483647) {"' _n
-	file write rsource `"			if (!require(bit64)) install.packages("bit64", repos="$Rrepos"); library(bit64)"' _n
+	file write rsource `"			if (!require(bit64)) install.packages("bit64", repos="`s(Rrepos)'"); library(bit64)"' _n
 	file write rsource `"			class(data2[[n]])<-NULL"' _n
 	file write rsource `"			data2[[n]]<-as.integer64.integer64(data2[[n]])"' _n
 	file write rsource `"			attr(data2[[n]], "label")<-attr(data[[n]], "label", exact=TRUE)"' _n
@@ -389,12 +401,7 @@ quietly {
 	file write rsource `"write_dta(data2, "`statafile'")"' _n
 
 	file close rsource
-	shell "$Rpath" --vanilla -f "`sourcefile'.R"
-	capture confirm file "`statafile'"
-	if _rc!=0 {
-		local Rpath "$Rpath"
-		shell "`Rpath'script" `sourcefile'.R
-	}
+	shell "`s(Rpath)'" --vanilla -f "`sourcefile'.R"
 	erase `sourcefile'.R
 	confirm file "`statafile'"
 
@@ -407,9 +414,9 @@ program importsav_foreign
 
 quietly {
 
-	local spssfile "$spssfile"
-	local statafile "$statafile"
-	local reencode "$reencode"
+	local spssfile "`s(spssfile)'"
+	local statafile "`s(statafile)'"
+	local reencode "`s(reencode)'"
 	capture erase "`statafile'"
 
 	local bws_dir `c(pwd)'
@@ -434,12 +441,7 @@ quietly {
 	file write rsource `"write.dta(data2, "`statafile'")"' _n
 
 	file close rsource
-	shell "$Rpath" --vanilla -f "`sourcefile'.R"
-	capture confirm file "`statafile'"
-	if _rc!=0 {
-		local Rpath "$Rpath"
-		shell "`Rpath'script" `sourcefile'.R
-	}
+	shell "`s(Rpath)'" --vanilla -f "`sourcefile'.R"
 	erase `sourcefile'.R
 	erase "temporary_`sourcefile'.dta"
 	confirm file "`statafile'"

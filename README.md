@@ -35,7 +35,7 @@ net from https://raw.githubusercontent.com/jh-min/importsav/master
 github install jh-min/importsav
 ```
 
-Current version of `importsav` is also available on SSC archive.
+Current version of `importsav` is *not* available on SSC archive yet, it will be soon updated.
 ```
 ssc install importsav , replace
 ```
@@ -66,6 +66,11 @@ If `reencode(string)` is set, `importsav` will set option `reencode` of R functi
 If `unicode(string)` is set and your version of Stata is newer than `13`, `importsav` will execute `unicode translate` using that `string` after R package `foreign` converted your data; here, `unicode(string)` will be automatically set identical to `reencode(string)` if omitted. If you don’t want this fallback behaviour, specify `off` in `unicode(string)`.
 
 By default, `importsav` compresses your data when current file size is larger than `256MB`. You can manually adjust that criterion via `compress(#)`. If `offdefault` is set, the data will not be compressed in any cases.
+
+
+## Requirements
+
+You should install [R][3] on your system. If you have installed R on the location other than the default, you should add the location of R to [whereis][4] or `system environment variable`. In the latter case, say path to `R.exe` is `D:\R-3.6.2\bin\R.exe`, you need to add either `D:\R-3.6.2` to `R_HOME environment variable` (Windows-only) or `D:\R-3.6.2\bin\R.exe` to `PATH environment variable`.
 
 
 ## Examples

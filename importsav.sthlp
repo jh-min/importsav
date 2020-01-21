@@ -1,6 +1,7 @@
 {smcl}
-{* *! version 3.0.3  14December2019}{...}
+{* *! version 3.0.4  21January2020}{...}
 {viewerjumpto "Syntax" "importsav##syntax"}{...}
+{viewerjumpto "Requirements" "importsav##requirements"}{...}
 {viewerjumpto "Description" "importsav##description"}{...}
 {viewerjumpto "Remarks" "importsav##remarks"}{...}
 {viewerjumpto "Examples" "importsav##examples"}{...}
@@ -53,6 +54,18 @@ By default, {cmd:importsav} compresses your data when current file size is large
 You can manually adjust that criterion via {opt compress(#)}.
 If {opt offdefault} is set, the data will not be compressed in any cases.{p_end}
 {p 4 6 2}
+
+
+{marker requirements}{...}
+{title:Requirements}
+
+{pstd}
+	You should install {browse "https://cran.r-project.org/":R} on your system.
+	If you have installed {cmd:R} on the location other than the default,
+	you should add the location of {cmd:R} to {search whereis} or {cmd:system environment variable}.
+	In the latter case, say path to {cmd:R.exe} is {cmd:D:\R-3.6.2\bin\R.exe},
+	you need to add either {cmd:D:\R-3.6.2} to {cmd:R_HOME environment variable} (Windows-only)
+	or {cmd:D:\R-3.6.2\bin\R.exe} to {cmd:PATH environment variable}.
 
 
 {marker description}{...}
