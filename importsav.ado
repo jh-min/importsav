@@ -1,4 +1,4 @@
-*** version 3.0.4 21Jan2020
+*** version 3.0.5 25Jul2020
 *** contact information: plus1@sogang.ac.kr
 
 program findr , sclass
@@ -382,7 +382,7 @@ quietly {
 	file write rsource `"data2<-data"' _n
 	file write rsource `"n<-1"' _n
 	file write rsource `"while (n<length(data)+1) {"' _n
-	file write rsource `"	if (is.numeric(data[[n]])==TRUE) {"' _n
+	file write rsource `"	if (is.numeric(data[[n]])==TRUE & all(is.na(data[[n]]))!=TRUE) {"' _n
 	file write rsource `"		if (max(data[[n]], na.rm=TRUE)>=2147483647) {"' _n
 	file write rsource `"			if (!require(bit64)) install.packages("bit64", repos="`s(Rrepos)'"); library(bit64)"' _n
 	file write rsource `"			class(data2[[n]])<-NULL"' _n
@@ -390,7 +390,7 @@ quietly {
 	file write rsource `"			attr(data2[[n]], "label")<-attr(data[[n]], "label", exact=TRUE)"' _n
 	file write rsource `"		}"' _n
 	file write rsource `"		else {"' _n
-	file write rsource `"			if (all(data[[n]]==as.integer(data[[n]]), na.rm=TRUE)==FALSE) {"' _n
+	file write rsource `"			if (all(data[[n]]==round(data[[n]], digits=0), na.rm=TRUE)==FALSE) {"' _n
 	file write rsource `"				data2[[n]]<-as.numeric(data[[n]])"' _n
 	file write rsource `"				attr(data2[[n]], "label")<-attr(data[[n]], "label", exact=TRUE)"' _n
 	file write rsource `"			}"' _n
