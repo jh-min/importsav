@@ -35,14 +35,13 @@ net from https://raw.githubusercontent.com/jh-min/importsav/master
 github install jh-min/importsav
 ```
 
-Current version of `importsav` is *not* available on SSC archive yet, it will be soon updated.
+<!-- Current version of `importsav` is *not* available on SSC archive yet, it will be soon updated. -->
 
-<!-- Current version of `importsav` is also available on SSC archive.
+Current version of `importsav` is also available on SSC archive.
 ```
 ssc install importsav , replace
 ```
-> version 3.0.4, Distribution-Date: 20200202
--->
+> version 3.0.5, Distribution-Date: 20200725
 
 [8]: <https://github.com/haghish/github>
 
