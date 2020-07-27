@@ -1,4 +1,4 @@
-*** version 3.0.5 25Jul2020
+*** version 3.0.6 27Jul2020
 *** contact information: plus1@sogang.ac.kr
 
 program findr , sclass
@@ -396,6 +396,7 @@ quietly {
 	file write rsource `"			}"' _n
 	file write rsource `"		}"' _n
 	file write rsource `"	}"' _n
+	file write rsource `"	colnames(data2)[n]<-gsub(pattern="\\.", replacement="_", colnames(data)[n])"' _n
 	file write rsource `"	n<-n+1"' _n
 	file write rsource `"}"' _n
 	file write rsource `"write_dta(data2, "`statafile'")"' _n
